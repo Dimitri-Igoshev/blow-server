@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Ip } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Ip, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
@@ -8,8 +8,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Get('get-ip')
-  async myEndpointFunc(@Ip() ip) {
-    return { ip };
+  async myEndpointFunc(@Ip() ip, @Req() req) {
+    return { ip, req };
   }
 
   @Post()
