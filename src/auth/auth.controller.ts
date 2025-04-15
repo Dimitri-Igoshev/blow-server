@@ -9,7 +9,10 @@ export class AuthController {
 
   @Get('get-ip')
   async myEndpointFunc(@Ip() ip, @Req() req) {
-    return { ip, req };
+    const { ip: ip2, method, originalUrl } = req;
+    console.log(ip2, method, originalUrl);
+
+    return { ip };
   }
 
   @Post()
