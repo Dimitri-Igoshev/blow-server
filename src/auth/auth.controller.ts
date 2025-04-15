@@ -2,18 +2,17 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Ip, Req, HostParam }
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+import { RealIP } from 'nestjs-real-ip';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Get('get-ip')
-  async myEndpointFunc(@Ip() ip, @HostParam() host) {
-    // const clientIP = req.headers['x-forwarded-for']?.split(',').shift() || req.socket?.remoteAddress;
-    // res.end(`The client's IP Address is: ${clientIP}`);
-    return { ip, host };
+  get(@RealIP() ip: string): string {
+    return ip;
   }
-
+  
   @Post()
   create(@Body() createAuthDto: CreateAuthDto) {
     return this.authService.create(createAuthDto);
