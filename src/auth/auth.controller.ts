@@ -1,40 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Ip, Req, HostParam } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Ip, Req, HostParam, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 import { RealIP } from 'nestjs-real-ip';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
-  @Get('get-ip')
-  get(@RealIP() ip: string): string {
-    return ip;
-  }
-  
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  // @Get('get-ip')
+  // get(@RealIP() ip: string, @Req() req: any): string {
+  //   console.log(req);
+  //   return ip;
+  // }
+
+  @Post('login')
+  login(@Body() data: LoginDto) {
+    return this.authService.login(data);
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Post('registration')
+  register(@Body() data: LoginDto) {
+    return this.authService.registration(data);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
+  @Post('recovery-password')
+  recovery(@Body() data: { email: string }, @Query('lang') lang: string) {
+    return this.authService.recoveryPassword(data.email, lang);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  @Post('reset-password')
+  reset(@Body() data: { password: string; token: string }) {
+    return this.authService.resetPassword(data.password, data.token);
   }
 }
