@@ -8,10 +8,9 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Get('get-ip')
-  async myEndpointFunc(@Ip() ip, @Req() req) {
-    const { ip: ip2, method, originalUrl } = req;
-    console.log(ip2, method, originalUrl);
-
+  async myEndpointFunc(@Ip() ip) {
+    // const clientIP = req.headers['x-forwarded-for']?.split(',').shift() || req.socket?.remoteAddress;
+    // res.end(`The client's IP Address is: ${clientIP}`);
     return { ip };
   }
 
