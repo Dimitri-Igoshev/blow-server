@@ -23,10 +23,10 @@ export class AuthController {
     return this.authService.registration(data);
   }
 
-  @Post('recovery-password')
-  recovery(@Body() data: { email: string }, @Query('lang') lang: string) {
-    return this.authService.recoveryPassword(data.email, lang);
-  }
+  // @Post('recovery-password')
+  // recovery(@Body() data: { email: string }, @Query('lang') lang: string) {
+  //   return this.authService.recoveryPassword(data.email, lang);
+  // }
 
   @Post('reset-password')
   reset(@Body() data: { password: string; token: string }) {

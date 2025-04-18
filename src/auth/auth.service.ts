@@ -1,6 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
+import { resetPasswordMail } from 'src/mail/template/reset-password.template';
+import { MailService } from 'src/mail/mail.service';
+import { UserService } from 'src/user/user.service';
+import { UserStatus } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -8,7 +13,7 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
     private readonly mailService: MailService,
-  ) {}
+  ) { }
 
   saltOrRounds = 12;
 
@@ -40,14 +45,14 @@ export class AuthService {
     if (!isMatch)
       throw new HttpException('Invalid password', HttpStatus.UNAUTHORIZED);
 
-    const payload = { sub: user._id, roles: user.roles, status: user.status };
+    const payload = { sub: user._id, role: user.role, status: user.status };
 
     return {
       accessToken: await this.createToken(payload, '7d'),
     };
   }
 
-  async registration(data: RegisterAuthDto) {
+  async registration(data: LoginDto) {
     const isExist = await this.userService.getUserByEmail(data.email);
 
     if (isExist)
@@ -57,8 +62,7 @@ export class AuthService {
       {
         ...data,
         status: UserStatus.ACTIVE,
-      },
-      null,
+      }
     );
 
     if (!res)
@@ -72,22 +76,22 @@ export class AuthService {
     });
   }
 
-  async recoveryPassword(email: string, lang: string) {
-    const user = await this.userService.getUserByEmail(email);
-    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+  // async recoveryPassword(email: string, lang: string) {
+  //   const user = await this.userService.getUserByEmail(email);
+  //   if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
-    const resetToken = await this.createToken({ sub: user._id, email }, '30d');
-    await this.userService.update(user._id.toString(), { resetToken }, null);
+  //   const resetToken = await this.createToken({ sub: user._id, email }, '30d');
+  //   await this.userService.update(user._id.toString(), { resetToken }, null);
 
-    const recoveryLink = `${process.env.FE_URL}/auth/reset?token=${resetToken}`;
+  //   const recoveryLink = `${process.env.FE_URL}/auth/reset?token=${resetToken}`;
 
-    return await !!this.mailService.send(
-      resetPasswordMail(
-        { email, firstName: user.firstName, lang },
-        recoveryLink,
-      ),
-    );
-  }
+  //   return await !!this.mailService.send(
+  //     resetPasswordMail(
+  //       { email, firstName: user.firstName, lang },
+  //       recoveryLink,
+  //     ),
+  //   );
+  // }
 
   async resetPassword(password: string, token: string) {
     const user = await this.userService.getUserByResetToken(token);
@@ -101,8 +105,7 @@ export class AuthService {
       user._id.toString(),
       {
         password: newPassword,
-      },
-      null,
+      }
     );
   }
 
