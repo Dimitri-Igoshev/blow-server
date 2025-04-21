@@ -9,7 +9,7 @@ export class CreateUserDto {
   city?: string
   age?: number
   height?: number
-  width?: number
+  weight?: number
   sponsor?: string
   photos?: IPhoto[]
   phone?: string;
