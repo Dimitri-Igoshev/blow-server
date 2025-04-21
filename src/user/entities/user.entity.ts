@@ -47,7 +47,7 @@ export class User {
   height: number
 
   @Prop()
-  width: number
+  weight: number
 
   @Prop()
   sponsor: boolean
