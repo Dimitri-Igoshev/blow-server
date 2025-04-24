@@ -5,13 +5,13 @@ export class CreateUserDto {
   password?: string;
   firstName?: string;
   lastName?: string;
-  sex?: string
-  city?: string
-  age?: number
-  height?: number
-  weight?: number
-  sponsor?: string
-  photos?: IPhoto[]
+  sex?: string;
+  city?: string;
+  age?: number;
+  height?: number;
+  weight?: number;
+  sponsor?: string;
+  photos?: IPhoto[];
   phone?: string;
   role?: string;
   status?: string;
