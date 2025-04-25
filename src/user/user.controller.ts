@@ -19,11 +19,11 @@ import { UserId } from 'src/decorators/user-id.decorator';
 import { JwtGuard } from 'src/auth/jwt.guard';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
-@UseGuards(JwtGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @UseGuards(JwtGuard)
   @Get('me')
   getMe(@UserId() id: string) {
     return this.userService.findOne(id);
@@ -52,6 +52,7 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+  @UseGuards(JwtGuard)
   @Patch(':id')
   @UseInterceptors(FilesInterceptor('files'))
   update(
@@ -62,6 +63,7 @@ export class UserController {
     return this.userService.update(id, data, files);
   }
 
+  @UseGuards(JwtGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
