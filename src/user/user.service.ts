@@ -49,10 +49,13 @@ export class UserService {
     }
   }
 
-  async findAll({ sex, limit = 12 }) {
+  async findAll({ sex, city, minage, maxage, limit = 12 }) {
     const filter: any = {};
 
     if (sex) filter.sex = sex;
+    if (city) filter.city = city;
+    if (minage) filter.age = { $gte: parseInt(minage) };
+    if (maxage) filter.age = { $lte: parseInt(maxage) };
 
     return await this.userModel
       .find(filter)

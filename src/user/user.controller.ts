@@ -41,10 +41,12 @@ export class UserController {
   @Get()
   findAll(
     @Query('sex') sex: string,
-    // @Query('search') search: string,
+    @Query('city') city: string,
+    @Query('minage') minage: string,
+    @Query('maxage') maxage: string,
     @Query('limit') limit: number,
   ) {
-    return this.userService.findAll({ sex });
+    return this.userService.findAll({ sex, city, minage, maxage, limit });
   }
 
   @Get(':id')
