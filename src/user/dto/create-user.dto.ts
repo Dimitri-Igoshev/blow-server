@@ -16,8 +16,8 @@ export class CreateUserDto {
   relationships?: boolean
   evening?: boolean
   about?: string;
-  voice?: string
-  premium?: boolean
+  voice?: string;
+  premium?: boolean;
   phone?: string;
   role?: string;
   status?: string;

@@ -14,6 +14,9 @@ export class UpdateUserDto {
   traveling?: boolean
   relationships?: boolean
   evening?: boolean
+  about?: string;
+  voice?: string;
+  premium?: boolean;
   photos?: IPhoto[]
   phone?: string;
   role?: string;
