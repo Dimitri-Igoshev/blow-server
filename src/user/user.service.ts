@@ -49,8 +49,10 @@ export class UserService {
     }
   }
 
-  async findAll() {
+  async findAll({ sex, limit = 12 }) {
     const filter: any = {};
+
+    if (sex) filter.sex = sex;
 
     return await this.userModel
       .find(filter)
@@ -60,7 +62,7 @@ export class UserService {
       //   { email: { $regex: search, $options: 'i' } },
       // ])
       .select('-password')
-      // .limit(limit)
+      .limit(limit)
       // .populate([{ path: 'projects', model: 'Project' }])
       .exec();
   }
