@@ -78,9 +78,11 @@ export class UserService {
       .findOneAndUpdate({ _id: id }, { ...data }, { new: true })
       .exec();
 
+    
+      
+
     if (!result) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-      return;
     }
 
     if (files?.length) {
@@ -101,7 +103,7 @@ export class UserService {
           .findOneAndUpdate(
             { _id: result.id },
             {
-              images: [...result.photos, ...images],
+              photos: [...result.photos, ...images],
               videoUrl: videoUrl[0],
             },
             { new: true },
@@ -111,11 +113,6 @@ export class UserService {
     }
 
     return result;
-
-    return await this.userModel
-      .findOneAndUpdate({ _id: id }, { ...data }, { new: true })
-      .select('-password')
-      .exec();
   }
 
   async remove(id: string) {
