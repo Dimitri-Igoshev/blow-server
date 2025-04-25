@@ -5,7 +5,7 @@ export class LoginDto {
   city?: string
   age?: number
   height?: number
-  width?: number
-  sponsor?: string
+  weight?: number
+  sponsor?: boolean
   photos?: any[]
 }
