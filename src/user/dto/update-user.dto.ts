@@ -3,7 +3,7 @@ import { IPhoto } from "src/common/interface/photo.interface";
 export class UpdateUserDto {
   firstName?: string;
   lastName?: string;
-  emil?: string;
+  email?: string;
   password?: string;
   sex?: string
   city?: string

@@ -10,13 +10,14 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserId } from 'src/decorators/user-id.decorator';
 import { JwtGuard } from 'src/auth/jwt.guard';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @UseGuards(JwtGuard)
 @Controller('user')
@@ -52,13 +53,13 @@ export class UserController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('files'))
   update(
     @Param('id') id: string,
     @Body() data: UpdateUserDto,
-    // @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return this.userService.update(id, data);
+    return this.userService.update(id, data, files);
   }
 
   @Delete(':id')
