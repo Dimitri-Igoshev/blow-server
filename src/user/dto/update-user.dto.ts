@@ -10,7 +10,10 @@ export class UpdateUserDto {
   age?: number
   height?: number
   weight?: number
-  sponsor?: string
+  sponsor?: boolean
+  traveling?: boolean
+  relationships?: boolean
+  evening?: boolean
   photos?: IPhoto[]
   phone?: string;
   role?: string;
@@ -19,4 +22,5 @@ export class UpdateUserDto {
   refreshToken?: string;
   resetToken?: string;
   confirmToken?: string;
+  updatedAt?: any;
 }

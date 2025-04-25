@@ -50,10 +50,28 @@ export class User {
   weight: number
 
   @Prop()
+  photos: IPhoto[];
+
+  @Prop()
   sponsor: boolean
 
   @Prop()
-  photos: IPhoto[];
+  traveling: boolean
+
+  @Prop()
+  relationships: boolean
+
+  @Prop()
+  evening: boolean
+
+  @Prop()
+  about: string;
+
+  @Prop()
+  voice: string
+
+  @Prop()
+  premium: boolean
 
   @Prop()
   phone: string;
@@ -75,6 +93,12 @@ export class User {
 
   @Prop()
   confirmToken: string;
+
+  @Prop({ default: Date.now()})
+  createdAt: Date;
+
+  @Prop({ default: Date.now()})
+  updatedAt: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

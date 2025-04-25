@@ -10,13 +10,18 @@ export class CreateUserDto {
   age?: number
   height?: number
   weight?: number
-  sponsor?: string
   photos?: IPhoto[]
+  sponsor?: boolean
+  traveling?: boolean
+  relationships?: boolean
+  evening?: boolean
+  about?: string;
+  voice?: string
+  premium?: boolean
   phone?: string;
   role?: string;
   status?: string;
   company?: string;
-  // refreshToken?: string;
-  // resetToken?: string;
   confirmToken?: string;
+  updatedAt?: any;
 }
