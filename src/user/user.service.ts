@@ -54,7 +54,8 @@ export class UserService {
 
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
-    if (minage) filter.age = { $gte: parseInt(minage), $lte: parseInt(maxage) };
+    if (minage) filter.and.push({ age: { $gte: parseInt(minage) } });
+    if (maxage) filter.and.push({ age: { $lte: parseInt(maxage) } });
 
     return await this.userModel
       .find(filter)
