@@ -54,8 +54,11 @@ export class UserService {
 
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
-    if (minage) filter.and.push({ age: { $gte: parseInt(minage) } });
-    if (maxage) filter.and.push({ age: { $lte: parseInt(maxage) } });
+    if (minage || maxage)
+      filter.age = {
+        $gte: parseInt(minage || 0),
+        $lte: parseInt(maxage || 150),
+      };
 
     return await this.userModel
       .find(filter)
@@ -82,9 +85,6 @@ export class UserService {
     const result = await this.userModel
       .findOneAndUpdate({ _id: id }, { ...data }, { new: true })
       .exec();
-
-    
-      
 
     if (!result) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
