@@ -47,7 +47,14 @@ export class UserController {
     @Query('maxage') maxage: string,
     @Query('limit') limit: number,
   ) {
-    return this.userService.findAll({ online, sex, city, minage, maxage, limit });
+    return this.userService.findAll({
+      online,
+      sex,
+      city,
+      minage,
+      maxage,
+      limit,
+    });
   }
 
   @Get(':id')
@@ -70,6 +77,14 @@ export class UserController {
   @Patch(':id/activity')
   activity(@Param('id') id: string, @Body() data: { timestamp: any }) {
     return this.userService.activity(id, data?.timestamp);
+  }
+
+  @Patch(':id/visit')
+  visit(
+    @Param('id') id: string,
+    @Body() data: { timestamp: any; guest: string },
+  ) {
+    return this.userService.visit(id, data);
   }
 
   @UseGuards(JwtGuard)

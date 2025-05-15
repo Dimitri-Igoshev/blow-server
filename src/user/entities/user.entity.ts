@@ -20,6 +20,11 @@ export enum UserSex {
   FEMALE = 'female',
 }
 
+export interface IGuest {
+  _id: string;
+  date: Date;
+}
+
 @Schema()
 export class User {
   @Prop({ required: true, unique: true })
@@ -102,6 +107,9 @@ export class User {
 
   @Prop({ default: Date.now() })
   activity: Date;
+
+  @Prop()
+  visits: IGuest[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

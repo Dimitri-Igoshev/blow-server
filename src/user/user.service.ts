@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './entities/user.entity';
+import { User, type IGuest } from './entities/user.entity';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { MFile } from 'src/file/mfile.class';
@@ -131,6 +131,34 @@ export class UserService {
 
     const result = await this.userModel
       .findOneAndUpdate({ _id: id }, { activity: timestamp }, { new: true })
+      .exec();
+
+    if (!result) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    return result;
+  }
+
+  async visit(id: string, data: { timestamp: any; guest: string }) {
+    if (!data?.timestamp || !data?.guest) return;
+
+    const user = await this.userModel.findById(id);
+
+    if (!user) return;
+
+    let visits = [...user.visits];
+
+    const record = visits.find((el: any) => el._id === data.guest);
+
+    if (record) {
+      visits = visits.filter((el: any) => el._id !== data.guest);
+    }
+
+    visits.unshift({ date: data.timestamp, _id: data.guest });
+
+    const result = await this.userModel
+      .findOneAndUpdate({ _id: id }, { visits: [...visits] }, { new: true })
       .exec();
 
     if (!result) {
