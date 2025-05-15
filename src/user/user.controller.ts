@@ -88,6 +88,30 @@ export class UserController {
   }
 
   @UseGuards(JwtGuard)
+  @Patch(':id/note')
+  createNote(
+    @Param('id') id: string,
+    @Body() data: { text: string; userId: string },
+  ) {
+    return this.userService.createNote(id, data);
+  }
+
+  @UseGuards(JwtGuard)
+  @Patch(':id/note-update')
+  updateNote(
+    @Param('id') id: string,
+    @Body() data: { text: string; userId: string },
+  ) {
+    return this.userService.updateNote(id, data);
+  }
+
+  @UseGuards(JwtGuard)
+  @Patch(':id/note-delete')
+  deleteNote(@Param('id') id: string, @Body() data: { userId: string }) {
+    return this.userService.deleteNote(id, data.userId);
+  }
+
+  @UseGuards(JwtGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);

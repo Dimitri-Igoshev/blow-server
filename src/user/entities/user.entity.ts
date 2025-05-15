@@ -25,6 +25,11 @@ export interface IGuest {
   date: Date;
 }
 
+export interface INote {
+  _id: string;
+  text: string;
+}
+
 @Schema()
 export class User {
   @Prop({ required: true, unique: true })
@@ -110,6 +115,9 @@ export class User {
 
   @Prop()
   visits: IGuest[];
+
+  @Prop()
+  notes: INote[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

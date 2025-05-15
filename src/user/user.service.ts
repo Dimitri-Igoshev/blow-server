@@ -168,6 +168,56 @@ export class UserService {
     return result;
   }
 
+  async createNote(id: string, data: { text: string; userId: string }) {
+    const result = await this.userModel
+      .findOneAndUpdate(
+        { _id: id },
+        { $unset: { notes: { _id: data.userId, text: data.text } } },
+        { new: true },
+      )
+      .exec();
+
+    if (!result) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+  }
+
+  async updateNote(id: string, data: { text: string; userId: string }) {
+    const user = await this.findOne(id);
+
+    if (!user) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    let notes = [...user.notes];
+
+    if (notes.length) {
+      notes = notes.filter((i: any) => i?._id !== data.userId);
+    }
+
+    const result = await this.userModel
+      .findOneAndUpdate(
+        { _id: id },
+        { notes: [{ _id: id, text: data.text }, ...notes] },
+        { new: true },
+      )
+      .exec();
+
+    if (!result) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+  }
+
+  async deleteNote(id: string, userId: string) {
+    return await this.userModel
+      .findOneAndUpdate(
+        { _id: id },
+        { $pull: { notes: { _id: userId } } },
+        { new: true },
+      )
+      .exec();
+  }
+
   async remove(id: string) {
     return await this.userModel.deleteOne({ _id: id }).exec();
   }
