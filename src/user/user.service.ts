@@ -169,10 +169,18 @@ export class UserService {
   }
 
   async createNote(id: string, data: { text: string; userId: string }) {
+    const user = await this.findOne(id);
+
+    if (!user) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    const notes = [...user.notes];
+
     const result = await this.userModel
       .findOneAndUpdate(
         { _id: id },
-        { $unset: { notes: { _id: data.userId, text: data.text } } },
+        { notes: [{ _id: data.userId, text: data.text }, ...notes] },
         { new: true },
       )
       .exec();
@@ -209,12 +217,20 @@ export class UserService {
   }
 
   async deleteNote(id: string, userId: string) {
+    const user = await this.findOne(id);
+
+    if (!user) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    let notes = [...user.notes];
+
+    if (notes.length) {
+      notes = notes.filter((i: any) => i?._id !== userId);
+    }
+
     return await this.userModel
-      .findOneAndUpdate(
-        { _id: id },
-        { $pull: { notes: { _id: userId } } },
-        { new: true },
-      )
+      .findOneAndUpdate({ _id: id }, { notes: [...notes] }, { new: true })
       .exec();
   }
 
