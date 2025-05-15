@@ -120,6 +120,20 @@ export class UserService {
     return result;
   }
 
+  async activity(id: string, timestamp: any) {
+    if (!timestamp) return;
+
+    const result = await this.userModel
+      .findOneAndUpdate({ _id: id }, { activity: timestamp }, { new: true })
+      .exec();
+
+    if (!result) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    return result;
+  }
+
   async remove(id: string) {
     return await this.userModel.deleteOne({ _id: id }).exec();
   }

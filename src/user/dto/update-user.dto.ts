@@ -1,23 +1,23 @@
-import { IPhoto } from "src/common/interface/photo.interface";
+import { IPhoto } from 'src/common/interface/photo.interface';
 
 export class UpdateUserDto {
   firstName?: string;
   lastName?: string;
   email?: string;
   password?: string;
-  sex?: string
-  city?: string
-  age?: number
-  height?: number
-  weight?: number
-  sponsor?: boolean
-  traveling?: boolean
-  relationships?: boolean
-  evening?: boolean
+  sex?: string;
+  city?: string;
+  age?: number;
+  height?: number;
+  weight?: number;
+  sponsor?: boolean;
+  traveling?: boolean;
+  relationships?: boolean;
+  evening?: boolean;
   about?: string;
   voice?: string;
   premium?: boolean;
-  photos?: IPhoto[]
+  photos?: IPhoto[];
   phone?: string;
   role?: string;
   status?: string;
@@ -26,4 +26,5 @@ export class UpdateUserDto {
   resetToken?: string;
   confirmToken?: string;
   updatedAt?: any;
+  activity?: any;
 }

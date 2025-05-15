@@ -6,6 +6,7 @@ import { MailModule } from './mail/mail.module';
 import { UserModule } from './user/user.module';
 import { FileModule } from './file/file.module';
 import { CommonModule } from './common/common.module';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CommonModule } from './common/common.module';
     UserModule,
     FileModule,
     CommonModule,
+    GatewayModule,
   ],
 })
 export class AppModule {}

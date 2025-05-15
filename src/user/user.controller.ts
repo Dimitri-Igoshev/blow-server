@@ -66,6 +66,12 @@ export class UserController {
   }
 
   @UseGuards(JwtGuard)
+  @Patch(':id/activity')
+  activity(@Param('id') id: string, @Body() data: { timestamp: any }) {
+    return this.userService.activity(id, data?.timestamp);
+  }
+
+  @UseGuards(JwtGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);

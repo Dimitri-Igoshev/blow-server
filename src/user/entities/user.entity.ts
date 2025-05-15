@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 import { IPhoto } from 'src/common/interface/photo.interface';
 
 export type UserDocument = HydratedDocument<User>;
@@ -35,43 +35,43 @@ export class User {
   lastName: string;
 
   @Prop()
-  sex: UserSex; 
+  sex: UserSex;
 
   @Prop()
-  city: string
+  city: string;
 
   @Prop()
-  age: number
+  age: number;
 
   @Prop()
-  height: number
+  height: number;
 
   @Prop()
-  weight: number
+  weight: number;
 
   @Prop()
   photos: IPhoto[];
 
   @Prop()
-  sponsor: boolean
+  sponsor: boolean;
 
   @Prop()
-  traveling: boolean
+  traveling: boolean;
 
   @Prop()
-  relationships: boolean
+  relationships: boolean;
 
   @Prop()
-  evening: boolean
+  evening: boolean;
 
   @Prop()
   about: string;
 
   @Prop()
-  voice: string
+  voice: string;
 
   @Prop()
-  premium: boolean
+  premium: boolean;
 
   @Prop()
   phone: string;
@@ -94,11 +94,14 @@ export class User {
   @Prop()
   confirmToken: string;
 
-  @Prop({ default: Date.now()})
+  @Prop({ default: Date.now() })
   createdAt: Date;
 
-  @Prop({ default: Date.now()})
+  @Prop({ default: Date.now() })
   updatedAt: Date;
+
+  @Prop({ default: Date.now() })
+  activity: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
