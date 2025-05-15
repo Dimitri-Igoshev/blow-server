@@ -49,8 +49,13 @@ export class UserService {
     }
   }
 
-  async findAll({ sex, city, minage, maxage, limit = 12 }) {
+  async findAll({ online, sex, city, minage, maxage, limit = 12 }) {
     const filter: any = {};
+
+    if (online) {
+      const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+      filter.activity = { $gte: oneMinuteAgo };
+    }
 
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
@@ -68,6 +73,7 @@ export class UserService {
       //   { email: { $regex: search, $options: 'i' } },
       // ])
       .select('-password')
+      .sort({ activity: -1 })
       .limit(limit)
       // .populate([{ path: 'projects', model: 'Project' }])
       .exec();

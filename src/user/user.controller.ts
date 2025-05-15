@@ -40,13 +40,14 @@ export class UserController {
 
   @Get()
   findAll(
+    @Query('online') online: string,
     @Query('sex') sex: string,
     @Query('city') city: string,
     @Query('minage') minage: string,
     @Query('maxage') maxage: string,
     @Query('limit') limit: number,
   ) {
-    return this.userService.findAll({ sex, city, minage, maxage, limit });
+    return this.userService.findAll({ online, sex, city, minage, maxage, limit });
   }
 
   @Get(':id')
@@ -65,7 +66,7 @@ export class UserController {
     return this.userService.update(id, data, files);
   }
 
-  @UseGuards(JwtGuard)
+  // @UseGuards(JwtGuard)
   @Patch(':id/activity')
   activity(@Param('id') id: string, @Body() data: { timestamp: any }) {
     return this.userService.activity(id, data?.timestamp);
