@@ -199,16 +199,11 @@ export class UserService {
 
     let notes = [...user.notes];
 
-    if (notes.length) {
-      notes = notes.filter((i: any) => i?._id !== data.userId);
-    }
+    notes = notes.filter((i: any) => i?._id !== data.userId);
+    notes.unshift({ _id: data.userId, text: data.text });
 
     const result = await this.userModel
-      .findOneAndUpdate(
-        { _id: id },
-        { notes: [{ _id: id, text: data.text }, ...notes] },
-        { new: true },
-      )
+      .findOneAndUpdate({ _id: id }, { notes: [...notes] }, { new: true })
       .exec();
 
     if (!result) {
