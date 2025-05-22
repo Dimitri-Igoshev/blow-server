@@ -118,6 +118,9 @@ export class User {
 
   @Prop()
   notes: INote[];
+
+  @Prop()
+  balance: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

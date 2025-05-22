@@ -240,4 +240,16 @@ export class UserService {
   getUserByResetToken(token: string) {
     return this.userModel.findOne({ resetToken: token }).exec();
   }
+
+  async addBalance({ id, sum }: { id: string, sum: number }) {
+    const user = await this.findOne(id)
+
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND)
+
+    //Создать транзакцию { _id, date, type, method, sum, description }
+
+    return await this.userModel
+      .findOneAndUpdate({ _id: id }, { balance: Number(user.balance) + Number(sum) }, { new: true })
+      .exec();
+  }
 }
