@@ -8,10 +8,11 @@ import { User, UserSchema } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { FileService } from 'src/file/file.service';
 import { MailService } from 'src/mail/mail.service';
+import { Transaction, TransactionSchema } from 'src/transaction/entities/transaction.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }, { name: Transaction.name, schema: TransactionSchema }]),
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
