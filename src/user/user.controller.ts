@@ -116,4 +116,10 @@ export class UserController {
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
+
+  @UseGuards(JwtGuard)
+  @Post('test/add-balance')
+  addBalance(@Body() data: { id: string, sum: number }) {
+    return this.userService.addBalance(data);
+  }
 }

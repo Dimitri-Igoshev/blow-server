@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 import { IPhoto } from 'src/common/interface/photo.interface';
+import { Transaction } from 'src/transaction/entities/transaction.entity';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -121,6 +122,13 @@ export class User {
 
   @Prop()
   balance: number;
+
+  @Prop([{
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Transaction',
+      default: null,
+    }])
+  transactions: Transaction[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

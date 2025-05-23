@@ -7,7 +7,6 @@ import { UserModule } from './user/user.module';
 import { FileModule } from './file/file.module';
 import { CommonModule } from './common/common.module';
 import { GatewayModule } from './gateway/gateway.module';
-import { FinanceModule } from './finance/finance.module';
 import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
@@ -26,7 +25,6 @@ import { TransactionModule } from './transaction/transaction.module';
     FileModule,
     CommonModule,
     GatewayModule,
-    FinanceModule,
     TransactionModule,
   ],
 })

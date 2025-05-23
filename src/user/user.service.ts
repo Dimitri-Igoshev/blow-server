@@ -7,6 +7,7 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { MFile } from 'src/file/mfile.class';
 import { FileService } from 'src/file/file.service';
+import { Transaction, TransactionMethod, TransactionType } from 'src/transaction/entities/transaction.entity';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 
@@ -14,8 +15,9 @@ const PASSWORD = 'bejse1-betkEv-vifcoh';
 export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Transaction.name) private transactionModel: Model<Transaction>,
     private readonly fileService: FileService,
-  ) {}
+  ) { }
 
   saltOrRounds = 12;
 
@@ -83,7 +85,7 @@ export class UserService {
     return await this.userModel
       .findOne({ _id: id })
       .select('-password')
-      // .populate([{ path: 'projects', model: 'Project' }])
+      .populate([{ path: 'transactions', model: 'Transaction' }])
       .exec();
   }
 
@@ -246,10 +248,25 @@ export class UserService {
 
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND)
 
-    //Создать транзакцию { _id, date, type, method, sum, description }
+    const transaction = new this.transactionModel({
+      userId: id,
+      type: TransactionType.CREDIT,
+      method: TransactionMethod.TEST,
+      sum: Number(sum),
+      description: `Пополнение баланса на ${sum}`,
+    });
+
+    const newTransaction = await transaction.save();
 
     return await this.userModel
-      .findOneAndUpdate({ _id: id }, { balance: Number(user.balance) + Number(sum) }, { new: true })
+      .findOneAndUpdate(
+        { _id: id }, 
+        { 
+          balance: Number(user.balance) + Number(sum), 
+          transactions: [newTransaction, ...user.transactions] 
+        }, 
+        { new: true }
+      )
       .exec();
   }
 }
