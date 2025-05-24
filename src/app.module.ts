@@ -8,6 +8,8 @@ import { FileModule } from './file/file.module';
 import { CommonModule } from './common/common.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { TransactionModule } from './transaction/transaction.module';
+import { ServicesModule } from './services/services.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { TransactionModule } from './transaction/transaction.module';
     CommonModule,
     GatewayModule,
     TransactionModule,
+    ServicesModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

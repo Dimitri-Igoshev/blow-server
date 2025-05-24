@@ -81,8 +81,8 @@ export class User {
   @Prop()
   voice: string;
 
-  @Prop()
-  premium: boolean;
+  @Prop({ default: Date.now() })
+  premiumEnd: Date;
 
   @Prop()
   phone: string;

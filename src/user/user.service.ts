@@ -244,15 +244,18 @@ export class UserService {
   }
 
   async addBalance({ id, sum }: { id: string, sum: number }) {
+    console.log(id, sum)
     const user = await this.findOne(id)
 
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND)
 
     const transaction = new this.transactionModel({
+      createdAt: new Date(),
+      updatedAt: new Date(),
       userId: id,
       type: TransactionType.CREDIT,
       method: TransactionMethod.TEST,
-      sum: Number(sum),
+      sum: +sum,
       description: `Пополнение баланса на ${sum}`,
     });
 
@@ -262,7 +265,7 @@ export class UserService {
       .findOneAndUpdate(
         { _id: id }, 
         { 
-          balance: Number(user.balance) + Number(sum), 
+          balance: user?.balance ? +user.balance + sum : sum,
           transactions: [newTransaction, ...user.transactions] 
         }, 
         { new: true }
