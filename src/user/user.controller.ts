@@ -18,6 +18,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserId } from 'src/decorators/user-id.decorator';
 import { JwtGuard } from 'src/auth/jwt.guard';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
 
 @Controller('user')
 export class UserController {
@@ -121,5 +122,11 @@ export class UserController {
   @Post('test/add-balance')
   addBalance(@Body() data: { id: string, sum: number }) {
     return this.userService.addBalance(data);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('buy/service')
+  byyService(@Body() data: BuyServiceDto) {
+    return this.userService.buyService(data);
   }
 }

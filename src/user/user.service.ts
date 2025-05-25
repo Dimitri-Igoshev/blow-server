@@ -8,6 +8,9 @@ import * as bcrypt from 'bcrypt';
 import { MFile } from 'src/file/mfile.class';
 import { FileService } from 'src/file/file.service';
 import { Transaction, TransactionMethod, TransactionType } from 'src/transaction/entities/transaction.entity';
+import { ServicePeriod, ServiceType } from 'src/services/entities/service.entity';
+import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
+import { get } from 'http';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 
@@ -244,7 +247,6 @@ export class UserService {
   }
 
   async addBalance({ id, sum }: { id: string, sum: number }) {
-    console.log(id, sum)
     const user = await this.findOne(id)
 
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND)
@@ -263,13 +265,84 @@ export class UserService {
 
     return await this.userModel
       .findOneAndUpdate(
-        { _id: id }, 
-        { 
+        { _id: id },
+        {
           balance: user?.balance ? +user.balance + sum : sum,
-          transactions: [newTransaction, ...user.transactions] 
-        }, 
+          transactions: [newTransaction, ...user.transactions]
+        },
         { new: true }
       )
       .exec();
+  }
+
+  getExpiredDate(period: string) {
+    const currentDate = new Date();
+
+    switch (period) {
+      case ServicePeriod.DAY:
+        currentDate.setDate(currentDate.getDate() + 1);
+        break;
+      case ServicePeriod.DAYS:
+        currentDate.setDate(currentDate.getDate() + 3);
+        break;
+      case ServicePeriod.WEEK:
+        currentDate.setDate(currentDate.getDate() + 7);
+        break;
+      case ServicePeriod.MONTH:
+        currentDate.setDate(currentDate.getDate() + 30);
+        break;
+      case ServicePeriod.QUARTER:
+        currentDate.setDate(currentDate.getDate() + 90);
+        break;
+      default:
+        break;
+    }
+
+    return currentDate;
+  }
+
+  async buyService({ userId, price, name, serviceId, quantity, period }: BuyServiceDto) {
+    const user = await this.findOne(userId)
+
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND)
+
+    if (user.balance < price) {
+      throw new HttpException('Not enough money', HttpStatus.BAD_REQUEST)
+    }
+
+    const transaction = new this.transactionModel({
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      userId,
+      type: TransactionType.DEBIT,
+      method: TransactionMethod.TEST,
+      sum: +price,
+      description: `Покупка услуги ${name || ''}`,
+    })
+
+    const newTransaction = await transaction.save();
+
+    if (!newTransaction) throw new HttpException('Error', HttpStatus.INTERNAL_SERVER_ERROR)
+
+    let newService = {}
+
+    const existingService = user?.services.find((s: any) => s.serviceId === serviceId)
+
+    if (!existingService) {
+      newService = {
+        _id: serviceId,
+        quantity: quantity || 0,
+        expiredAt: this.getExpiredDate(period || ''),
+      }
+
+    }
+
+    // userId: string;
+    // serviceId: string;
+    // name?: string;
+    // period?: string;
+    // quantity?: number;
+    // price: number;
+    // services: ServiceInKit[];
   }
 }

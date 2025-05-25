@@ -23,6 +23,7 @@ export interface IServiceOption {
   period?: ServicePeriod;
   quantity?: number;
   price?: number;
+  servicesOptions?: IServiceOption[];
 }
 
 @Schema()
