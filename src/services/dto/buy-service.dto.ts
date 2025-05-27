@@ -11,5 +11,5 @@ export class BuyServiceDto {
   period?: string;
   quantity?: number;
   price: number;
-  services: ServiceInKit[];
+  services?: any[];
 }

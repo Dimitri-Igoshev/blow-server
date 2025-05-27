@@ -7,4 +7,5 @@ export class UpdateServiceDto {
   options?: any[];
   description?: string;
   order?: number;
+  btn?: string;
 }

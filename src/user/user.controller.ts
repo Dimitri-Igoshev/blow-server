@@ -126,7 +126,13 @@ export class UserController {
 
   @UseGuards(JwtGuard)
   @Post('buy/service')
-  byyService(@Body() data: BuyServiceDto) {
+  buyService(@Body() data: BuyServiceDto) {
     return this.userService.buyService(data);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('buy/services-kit')
+  buyServicesKit(@Body() data: BuyServiceDto) {
+    return this.userService.buyServicesKit(data);
   }
 }

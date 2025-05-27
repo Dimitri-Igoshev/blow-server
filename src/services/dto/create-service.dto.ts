@@ -5,4 +5,5 @@ export class CreateServiceDto {
     options: any[];
     description?: string;
     order?: number;
+    btn?: string;
 }

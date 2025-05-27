@@ -49,6 +49,9 @@ export class Service {
 
   @Prop({ type: Number, default: 1 })
   order: number;
+
+  @Prop({ type: String, default: 'Продлить' })
+  btn: string;
 }
 
 export const ServiceSchema = SchemaFactory.createForClass(Service);
