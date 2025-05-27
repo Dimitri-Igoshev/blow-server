@@ -12,4 +12,5 @@ export class BuyServiceDto {
   quantity?: number;
   price: number;
   services?: any[];
+  servicesOptions?: any[];
 }

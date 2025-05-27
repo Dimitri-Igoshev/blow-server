@@ -7,8 +7,15 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { MFile } from 'src/file/mfile.class';
 import { FileService } from 'src/file/file.service';
-import { Transaction, TransactionMethod, TransactionType } from 'src/transaction/entities/transaction.entity';
-import { ServicePeriod, ServiceType } from 'src/services/entities/service.entity';
+import {
+  Transaction,
+  TransactionMethod,
+  TransactionType,
+} from 'src/transaction/entities/transaction.entity';
+import {
+  ServicePeriod,
+  ServiceType,
+} from 'src/services/entities/service.entity';
 import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
 import { get } from 'http';
 
@@ -20,7 +27,7 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Transaction.name) private transactionModel: Model<Transaction>,
     private readonly fileService: FileService,
-  ) { }
+  ) {}
 
   saltOrRounds = 12;
 
@@ -246,10 +253,10 @@ export class UserService {
     return this.userModel.findOne({ resetToken: token }).exec();
   }
 
-  async addBalance({ id, sum }: { id: string, sum: number }) {
-    const user = await this.findOne(id)
+  async addBalance({ id, sum }: { id: string; sum: number }) {
+    const user = await this.findOne(id);
 
-    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND)
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     const transaction = new this.transactionModel({
       createdAt: new Date(),
@@ -268,9 +275,9 @@ export class UserService {
         { _id: id },
         {
           balance: user?.balance ? +user.balance + sum : sum,
-          transactions: [newTransaction, ...user.transactions]
+          transactions: [newTransaction, ...user.transactions],
         },
-        { new: true }
+        { new: true },
       )
       .exec();
   }
@@ -299,14 +306,20 @@ export class UserService {
     return currentDate;
   }
 
-  async buyService({ userId, price, name, serviceId, quantity = 0, period }: BuyServiceDto) {
-    console.log('buyService', { userId, price, name, serviceId, quantity, period })
-    const user = await this.userModel.findOne({ _id: userId })
+  async buyService({
+    userId,
+    price,
+    name,
+    serviceId,
+    quantity = 0,
+    period,
+  }: BuyServiceDto) {
+    const user = await this.userModel.findOne({ _id: userId });
 
-    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND)
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     if (+user.balance < +price) {
-      throw new HttpException('Not enough money', HttpStatus.BAD_REQUEST)
+      throw new HttpException('Not enough money', HttpStatus.BAD_REQUEST);
     }
 
     const transaction = new this.transactionModel({
@@ -317,53 +330,116 @@ export class UserService {
       method: TransactionMethod.TEST,
       sum: +price,
       description: `Покупка услуги ${name || ''}`,
-    })
+    });
 
-    const newTransaction = await transaction.save();
+    let newTransaction;
 
-    if (!newTransaction) throw new HttpException('Error', HttpStatus.INTERNAL_SERVER_ERROR)
+    if (price) {
+      newTransaction = await transaction.save();
 
-    let newService: any = null
+      if (!newTransaction)
+        throw new HttpException('Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
-    const existingService = user?.services.find((s: any) => s._id === serviceId)
-    let userServices = [...user?.services]
+    let newService: any = null;
+
+    const existingService = user?.services.find(
+      (s: any) => s._id === serviceId,
+    );
+    let userServices = [...user?.services];
     let changedServices: any = {
       _id: serviceId,
-    }
+    };
 
     if (!existingService) {
       newService = {
         _id: serviceId,
         quantity: quantity || 0,
         expiredAt: this.getExpiredDate(period || ''),
-      }
+      };
 
-      userServices = [newService, ...userServices]
+      userServices = [newService, ...userServices];
     } else {
       if (existingService?.expiredAt) {
-        changedServices.expiredAt = this.getExpiredDate(period || '', new Date(existingService.expiredAt))
-        userServices = userServices.filter((s: any) => s.serviceId !== serviceId)
-        userServices = [changedServices, ...userServices]
+        changedServices.expiredAt = this.getExpiredDate(
+          period || '',
+          new Date(existingService.expiredAt),
+        );
+        userServices = userServices.filter(
+          (s: any) => s.serviceId !== serviceId,
+        );
+        userServices = [changedServices, ...userServices];
       }
       if (existingService?.quantity) {
-        changedServices.quantity = +existingService.quantity + +quantity
-        userServices = userServices.filter((s: any) => s.serviceId !== serviceId)
-        userServices = [changedServices, ...userServices]
+        changedServices.quantity = +existingService.quantity + +quantity;
+        userServices = userServices.filter(
+          (s: any) => s.serviceId !== serviceId,
+        );
+        userServices = [changedServices, ...userServices];
       }
     }
 
     return await this.userModel
-      .findOneAndUpdate({ _id: userId }, { services: [...userServices], balance: +user.balance - +price }, { new: true })
+      .findOneAndUpdate(
+        { _id: userId },
+        {
+          services: [...userServices],
+          balance: +user.balance - +price,
+          transactions: [newTransaction, ...user.transactions],
+        },
+        { new: true },
+      )
       .exec();
   }
 
-  async buyServicesKit({ userId, price, name, serviceId, quantity = 0, period, services }: BuyServiceDto) {
-    await this.buyService({ userId, price, name, serviceId, quantity, period })
+  async buyServicesKit({
+    userId,
+    price,
+    name,
+    serviceId,
+    quantity = 0,
+    period,
+    services,
+    servicesOptions,
+  }: BuyServiceDto) {
+    await this.buyService({ userId, price, name, serviceId, quantity, period });
 
-    if (!services) return
+    if (!servicesOptions?.length || !services) return;
 
-    services.forEach((service: any) => {
-      this.buyService({ userId, serviceId: service?._id, price: 0, name: service.name, quantity: service.quantity, period: service.period })
-    })
+    // services?.forEach((service: any, idx: number) => {
+    await this.buyService({
+        userId,
+        serviceId: services[0]?._id,
+        price: 0,
+        name: servicesOptions[0]?.name,
+        quantity: servicesOptions[0]?.quantity || servicesOptions[0]?.quantuty,
+        period: servicesOptions[0]?.period,
+      });
+    // });
+
+    await this.buyService({
+      userId,
+      serviceId: services[1]?._id,
+      price: 0,
+      name: servicesOptions[1]?.name,
+      quantity: servicesOptions[1]?.quantity || servicesOptions[1]?.quantuty,
+      period: servicesOptions[1]?.period,
+    });
+    await this.buyService({
+      userId,
+      serviceId: services[2]?._id,
+      price: 0,
+      name: servicesOptions[2]?.name,
+      quantity: servicesOptions[2]?.quantity || servicesOptions[2]?.quantuty,
+      period: servicesOptions[2]?.period,
+    });
+    await this.buyService({
+      userId,
+      serviceId: services[3]?._id,
+      price: 0,
+      name: servicesOptions[3]?.name,
+      quantity: servicesOptions[3]?.quantity || servicesOptions[3]?.quantuty,
+      period: servicesOptions[3]?.period,
+    });
   }
 }

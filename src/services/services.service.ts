@@ -9,7 +9,7 @@ import { Model } from 'mongoose';
 export class ServicesService {
   constructor(
     @InjectModel(Service.name) private serviceModel: Model<Service>,
-  ) { }
+  ) {}
 
   async create(data: CreateServiceDto) {
     const isExist = await this.serviceModel.findOne({ name: data.name });
