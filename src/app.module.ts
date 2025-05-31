@@ -10,6 +10,7 @@ import { GatewayModule } from './gateway/gateway.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { ServicesModule } from './services/services.module';
 import { ChatModule } from './chat/chat.module';
+import { MailingModule } from './mailing/mailing.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ChatModule } from './chat/chat.module';
     TransactionModule,
     ServicesModule,
     ChatModule,
+    MailingModule,
   ],
 })
 export class AppModule {}
