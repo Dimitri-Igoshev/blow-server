@@ -13,15 +13,21 @@ export class Mailing {
   @Prop({ default: true })
   active: boolean;
 
-  @Prop(
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  })
+  owner: User;
+
+  @Prop([
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
     },
-  )
-  owner: User;
+  ])
+  interested: User[];
 }
 
 export const MailingSchema = SchemaFactory.createForClass(Mailing);
-

@@ -3,4 +3,5 @@ export class CreateMailingDto {
     owner: string;
     updatedAt?: string; 
     active?: boolean;
+    interested?: any[];
 }

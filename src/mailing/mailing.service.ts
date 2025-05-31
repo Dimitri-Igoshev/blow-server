@@ -19,7 +19,10 @@ export class MailingService {
   async findAll() {
     return await this.mailingModel
       .find()
-      .populate([{ path: 'owner', model: 'User' }])
+      .populate([
+        { path: 'owner', model: 'User' },
+        { path: 'interested', model: 'User' },
+      ])
       .sort({ order: -1 })
       .exec();
   }
@@ -27,7 +30,10 @@ export class MailingService {
   findOne(id: string) {
     return this.mailingModel
       .findOne({ _id: id })
-      .populate([{ path: 'owner', model: 'User' }])
+      .populate([
+        { path: 'owner', model: 'User' },
+        { path: 'interested', model: 'User' },
+      ])
       .exec();
   }
 
