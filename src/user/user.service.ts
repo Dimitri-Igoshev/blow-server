@@ -73,7 +73,8 @@ export class UserService {
 
     filter.services = {
       $elemMatch: {
-        _id: TOP_ID,
+        //@ts-ignore
+        _id: ObjectId(TOP_ID),
         $or: [
           { expiredAt: { $exists: false } },
           { expiredAt: { $lt: new Date() } },
