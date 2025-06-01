@@ -411,8 +411,8 @@ export class UserService {
         serviceId: services[0]?._id,
         price: 0,
         name: servicesOptions[0]?.name,
-        quantity: servicesOptions[0]?.quantity || servicesOptions[0]?.quantuty,
-        period: servicesOptions[0]?.period,
+        quantity: servicesOptions[0]?.quantity || 0,
+        period: !servicesOptions[0]?.quantity && servicesOptions[0]?.period,
       });
     // });
 
@@ -421,24 +421,25 @@ export class UserService {
       serviceId: services[1]?._id,
       price: 0,
       name: servicesOptions[1]?.name,
-      quantity: servicesOptions[1]?.quantity || servicesOptions[1]?.quantuty,
-      period: servicesOptions[1]?.period,
+      quantity: servicesOptions[1]?.quantity || 0,
+      period: !servicesOptions[1]?.quantity && servicesOptions[1]?.period,
     });
+    
     await this.buyService({
       userId,
       serviceId: services[2]?._id,
       price: 0,
       name: servicesOptions[2]?.name,
-      quantity: servicesOptions[2]?.quantity || servicesOptions[2]?.quantuty,
-      period: servicesOptions[2]?.period,
+      quantity: servicesOptions[2]?.quantity || 0,
+      period: !servicesOptions[2]?.quantity && servicesOptions[2]?.period,
     });
     await this.buyService({
       userId,
       serviceId: services[3]?._id,
       price: 0,
       name: servicesOptions[3]?.name,
-      quantity: servicesOptions[3]?.quantity || servicesOptions[3]?.quantuty,
-      period: servicesOptions[3]?.period,
+      quantity: servicesOptions[3]?.quantity || 0,
+      period: !servicesOptions[3]?.quantity && servicesOptions[3]?.period,
     });
   }
 }
