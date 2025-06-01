@@ -12,13 +12,11 @@ import {
   TransactionMethod,
   TransactionType,
 } from 'src/transaction/entities/transaction.entity';
-import {
-  ServicePeriod,
-  ServiceType,
-} from 'src/services/entities/service.entity';
+import { ServicePeriod } from 'src/services/entities/service.entity';
 import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
+export const TOP_ID = '6830b9a752bb4caefa0418a8';
 
 @Injectable()
 export class UserService {
@@ -75,6 +73,7 @@ export class UserService {
 
     filter.services = {
       $elemMatch: {
+        _id: TOP_ID,
         $or: [
           { expiredAt: { $exists: false } },
           { expiredAt: { $lt: new Date() } },
