@@ -67,9 +67,18 @@ export class UserService {
     const filter: any = {};
 
     // top
+    // filter.services = {
+    //   $elemMatch: {
+    //     expiredAt: { $gt: new Date() },
+    //   },
+    // };
+
     filter.services = {
       $elemMatch: {
-        expiredAt: { $gt: new Date() },
+        $or: [
+          { expiredAt: { $exists: false } },
+          { expiredAt: { $lt: new Date() } },
+        ],
       },
     };
 
