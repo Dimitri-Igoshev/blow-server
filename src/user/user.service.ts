@@ -99,23 +99,23 @@ export class UserService {
       // .populate([{ path: 'projects', model: 'Project' }])
       .exec();
 
-    if (topUsers.length < limit) {
-      filter.services = {
-        $elemMatch: {
-          $or: [
-            { expiredAt: { $exists: false } },
-            { expiredAt: { $lt: new Date() } },
-          ],
-        },
-      };
-      const users = await this.userModel
-        .find(filter)
-        .select('-password')
-        .sort({ raisedAt: -1 })
-        .limit(limit - topUsers.length);
+    // if (topUsers.length < limit) {
+    //   filter.services = {
+    //     $elemMatch: {
+    //       $or: [
+    //         { expiredAt: { $exists: false } },
+    //         { expiredAt: { $lt: new Date() } },
+    //       ],
+    //     },
+    //   };
+    //   const users = await this.userModel
+    //     .find(filter)
+    //     .select('-password')
+    //     .sort({ raisedAt: -1 })
+    //     .limit(limit - topUsers.length);
 
-      return [...topUsers, ...users];
-    }
+    //   return [...topUsers, ...users];
+    // }
 
     return [...topUsers];
   }
