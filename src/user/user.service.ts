@@ -441,5 +441,13 @@ export class UserService {
       quantity: servicesOptions[3]?.quantity || 0,
       period: !servicesOptions[3]?.quantity && servicesOptions[3]?.period ? servicesOptions[3]?.period : '',
     });
+    await this.buyService({
+      userId,
+      serviceId: services[4]?._id,
+      price: 0,
+      name: servicesOptions[4]?.name,
+      quantity: servicesOptions[4]?.quantity || 0,
+      period: !servicesOptions[4]?.quantity && servicesOptions[4]?.period ? servicesOptions[4]?.period : '',
+    });
   }
 }
