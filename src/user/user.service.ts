@@ -93,7 +93,7 @@ export class UserService {
       // ])
       .select('-password')
       .sort({ raisedAt: -1, updatedAt: -1, createdAt: -1 })
-      .limit(100)
+      .limit(limit)
       // .populate([{ path: 'projects', model: 'Project' }])
       .exec();
 
@@ -114,7 +114,7 @@ export class UserService {
         })
         .select('-password')
         .sort({ raisedAt: -1, updatedAt: -1, createdAt: -1 })
-        .limit(100 - topUsers.length);
+        .limit(limit - topUsers.length);
 
       return [...topUsers, ...users];
     }
