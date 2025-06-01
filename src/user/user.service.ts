@@ -343,9 +343,13 @@ export class UserService {
     let newService: any = null;
 
     const existingService = user?.services.find(
-      (s: any) => s === serviceId,
+      (s: any) => s._id === serviceId,
     );
+
+    console.log('existingService', existingService);
+
     let userServices = [...user?.services];
+    
     let changedServices: any = {
       _id: serviceId,
     };
@@ -357,7 +361,7 @@ export class UserService {
         expiredAt: period ? this.getExpiredDate(period) : null,
       };
 
-      userServices = [newService, ...userServices];
+      userServices = [newService, ...userServices.filter((s: any) => s._id !== serviceId)];
     } else {
       if (existingService?.expiredAt) {
         changedServices.expiredAt = period ? this.getExpiredDate(
