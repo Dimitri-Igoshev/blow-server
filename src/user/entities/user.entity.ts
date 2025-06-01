@@ -118,6 +118,12 @@ export class User {
   updatedAt: Date;
 
   @Prop({ default: Date.now() })
+  raisedAt: Date;
+
+  @Prop({ default: Date.now() })
+  inTopAt: Date;
+
+  @Prop({ default: Date.now() })
   activity: Date;
 
   @Prop()

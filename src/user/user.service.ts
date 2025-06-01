@@ -61,11 +61,21 @@ export class UserService {
   }
 
   async findAll({ online, sex, city, minage, maxage, limit = 12 }) {
+    // сначала выдавать топ а потом все остальные с учетом лимита если лимит 12 а перм 7 то выдать 7 премов и еще 5 по дате изменения
+    // сортировка по дате изсенения
+
     const filter: any = {};
 
+    // top
+    filter.services = {
+      $elemMatch: {
+        expiredAt: { $gt: new Date() },
+      },
+    };
+
     if (online) {
-      const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
-      filter.activity = { $gte: oneMinuteAgo };
+      const fiveMinuteAgo = new Date(Date.now() - 300 * 1000);
+      filter.activity = { $gte: fiveMinuteAgo };
     }
 
     if (sex) filter.sex = sex;
@@ -76,7 +86,7 @@ export class UserService {
         $lte: parseInt(maxage || 150),
       };
 
-    return await this.userModel
+    const topUsers = await this.userModel
       .find(filter)
       // .or([
       //   { firstName: { $regex: search, $options: 'i' } },
@@ -84,10 +94,30 @@ export class UserService {
       //   { email: { $regex: search, $options: 'i' } },
       // ])
       .select('-password')
-      .sort({ activity: -1 })
+      .sort({ raisedAt: -1 })
       .limit(limit)
       // .populate([{ path: 'projects', model: 'Project' }])
       .exec();
+
+    if (topUsers.length < limit) {
+      filter.services = {
+        $elemMatch: {
+          $or: [
+            { expiredAt: { $exists: false } },
+            { expiredAt: { $lt: new Date() } },
+          ],
+        },
+      };
+      const users = await this.userModel
+        .find(filter)
+        .select('-password')
+        .sort({ raisedAt: -1 })
+        .limit(limit - topUsers.length);
+
+      return [...topUsers, ...users];
+    }
+
+    return [...topUsers];
   }
 
   async findOne(id: string) {
@@ -347,7 +377,7 @@ export class UserService {
     );
 
     let userServices = [...user?.services];
-    
+
     let changedServices: any = {
       _id: serviceId,
     };
@@ -362,23 +392,18 @@ export class UserService {
       userServices = [newService, ...userServices];
     } else {
       if (period) {
-        changedServices.expiredAt = period ? this.getExpiredDate(
-          period,
-          new Date(existingService.expiredAt),
-        ) : null;
+        changedServices.expiredAt = period
+          ? this.getExpiredDate(period, new Date(existingService.expiredAt))
+          : null;
 
-        userServices = userServices.filter(
-          (s: any) => s._id !== serviceId,
-        );
+        userServices = userServices.filter((s: any) => s._id !== serviceId);
 
         userServices = [changedServices, ...userServices];
       }
       if (quantity) {
         changedServices.quantity = +existingService.quantity + +quantity;
 
-        userServices = userServices.filter(
-          (s: any) => s._id !== serviceId,
-        );
+        userServices = userServices.filter((s: any) => s._id !== serviceId);
         userServices = [changedServices, ...userServices];
       }
     }
@@ -412,13 +437,16 @@ export class UserService {
 
     // services?.forEach((service: any, idx: number) => {
     await this.buyService({
-        userId,
-        serviceId: services[0]?._id,
-        price: 0,
-        name: servicesOptions[0]?.name,
-        quantity: servicesOptions[0]?.quantity || 0,
-        period: !servicesOptions[0]?.quantity && servicesOptions[0]?.period ? servicesOptions[0]?.period : '',
-      });
+      userId,
+      serviceId: services[0]?._id,
+      price: 0,
+      name: servicesOptions[0]?.name,
+      quantity: servicesOptions[0]?.quantity || 0,
+      period:
+        !servicesOptions[0]?.quantity && servicesOptions[0]?.period
+          ? servicesOptions[0]?.period
+          : '',
+    });
     // });
 
     await this.buyService({
@@ -427,16 +455,22 @@ export class UserService {
       price: 0,
       name: servicesOptions[1]?.name,
       quantity: servicesOptions[1]?.quantity || 0,
-      period: !servicesOptions[1]?.quantity && servicesOptions[1]?.period ? servicesOptions[1]?.period : '',
+      period:
+        !servicesOptions[1]?.quantity && servicesOptions[1]?.period
+          ? servicesOptions[1]?.period
+          : '',
     });
-    
+
     await this.buyService({
       userId,
       serviceId: services[2]?._id,
       price: 0,
       name: servicesOptions[2]?.name,
       quantity: servicesOptions[2]?.quantity || 0,
-      period: !servicesOptions[2]?.quantity && servicesOptions[2]?.period ? servicesOptions[2]?.period : '',
+      period:
+        !servicesOptions[2]?.quantity && servicesOptions[2]?.period
+          ? servicesOptions[2]?.period
+          : '',
     });
     await this.buyService({
       userId,
@@ -444,7 +478,10 @@ export class UserService {
       price: 0,
       name: servicesOptions[3]?.name,
       quantity: servicesOptions[3]?.quantity || 0,
-      period: !servicesOptions[3]?.quantity && servicesOptions[3]?.period ? servicesOptions[3]?.period : '',
+      period:
+        !servicesOptions[3]?.quantity && servicesOptions[3]?.period
+          ? servicesOptions[3]?.period
+          : '',
     });
   }
 }

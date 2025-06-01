@@ -27,4 +27,5 @@ export class UpdateUserDto {
   confirmToken?: string;
   updatedAt?: any;
   activity?: any;
+  raisedAt?: any;
 }
