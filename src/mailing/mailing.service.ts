@@ -12,7 +12,10 @@ export class MailingService {
   ) {}
 
   async create(data: CreateMailingDto) {
-    const newMailing = new this.mailingModel(data);
+    const newMailing = new this.mailingModel({
+      ...data,
+      updatedAt: new Date(),
+    });
     return await newMailing.save();
   }
 
