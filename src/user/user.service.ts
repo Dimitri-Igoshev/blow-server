@@ -359,7 +359,7 @@ export class UserService {
         expiredAt: period ? this.getExpiredDate(period) : null,
       };
 
-      userServices = [newService, ...arr];
+      userServices = [newService, ...userServices];
     } else {
       if (existingService?.expiredAt) {
         changedServices.expiredAt = period ? this.getExpiredDate(
@@ -375,7 +375,7 @@ export class UserService {
       }
       if (existingService?.quantity) {
         changedServices.quantity = +existingService.quantity + +quantity;
-        
+
         userServices = userServices.filter(
           (s: any) => s._id !== serviceId,
         );
