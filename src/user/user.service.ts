@@ -354,16 +354,16 @@ export class UserService {
       newService = {
         _id: serviceId,
         quantity: quantity || 0,
-        expiredAt: this.getExpiredDate(period || ''),
+        expiredAt: period ? this.getExpiredDate(period) : null,
       };
 
       userServices = [newService, ...userServices];
     } else {
       if (existingService?.expiredAt) {
-        changedServices.expiredAt = this.getExpiredDate(
-          period || '',
+        changedServices.expiredAt = period ? this.getExpiredDate(
+          period,
           new Date(existingService.expiredAt),
-        );
+        ) : null;
         userServices = userServices.filter(
           (s: any) => s.serviceId !== serviceId,
         );
