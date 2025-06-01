@@ -17,7 +17,6 @@ import {
   ServiceType,
 } from 'src/services/entities/service.entity';
 import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
-import { get } from 'http';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 

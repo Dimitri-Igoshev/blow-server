@@ -23,7 +23,7 @@ export class MailingService {
         { path: 'owner', model: 'User' },
         { path: 'interested', model: 'User' },
       ])
-      .sort({ order: -1 })
+      .sort({ updatedAt: -1 })
       .exec();
   }
 
