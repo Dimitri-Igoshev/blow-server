@@ -135,4 +135,10 @@ export class UserController {
   buyServicesKit(@Body() data: BuyServiceDto) {
     return this.userService.buyServicesKit(data);
   }
+
+  @UseGuards(JwtGuard)
+  @Patch('use/raise-profile')
+  useRaiseProfile(@Body() data: { id: string }) {
+    return this.userService.useRaiseProfile(data.id);
+  }
 }

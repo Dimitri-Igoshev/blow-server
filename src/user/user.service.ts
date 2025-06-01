@@ -14,9 +14,11 @@ import {
 } from 'src/transaction/entities/transaction.entity';
 import { ServicePeriod } from 'src/services/entities/service.entity';
 import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
+import { create } from 'domain'
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
-export const TOP_ID = '6830b9a752bb4caefa0418a8';
+const TOP_ID = '6830b9a752bb4caefa0418a8';
+const RAISE_ID = '6830b4d752bb4caefa041497';
 
 @Injectable()
 export class UserService {
@@ -59,28 +61,7 @@ export class UserService {
   }
 
   async findAll({ online, sex, city, minage, maxage, limit = 12 }) {
-    // сначала выдавать топ а потом все остальные с учетом лимита если лимит 12 а перм 7 то выдать 7 премов и еще 5 по дате изменения
-    // сортировка по дате изсенения
-
     const filter: any = {};
-
-    // top
-    // filter.services = {
-    //   $elemMatch: {
-    //     expiredAt: { $gt: new Date() },
-    //   },
-    // };
-
-    filter.services = {
-      $elemMatch: {
-        //@ts-ignore
-        _id: ObjectId(TOP_ID),
-        $or: [
-          { expiredAt: { $exists: false } },
-          { expiredAt: { $lt: new Date() } },
-        ],
-      },
-    };
 
     if (online) {
       const fiveMinuteAgo = new Date(Date.now() - 300 * 1000);
@@ -96,35 +77,47 @@ export class UserService {
       };
 
     const topUsers = await this.userModel
-      .find(filter)
+      .find({
+        ...filter,
+        services: {
+          $elemMatch: {
+            _id: TOP_ID,
+            expiredAt: { $gt: new Date(Date.now()) },
+          },
+        },
+      })
       // .or([
       //   { firstName: { $regex: search, $options: 'i' } },
       //   { lastName: { $regex: search, $options: 'i' } },
       //   { email: { $regex: search, $options: 'i' } },
       // ])
       .select('-password')
-      .sort({ raisedAt: -1 })
-      .limit(limit)
+      .sort({ raisedAt: -1, updatedAt: -1, createdAt: -1 })
+      .limit(100)
       // .populate([{ path: 'projects', model: 'Project' }])
       .exec();
 
-    // if (topUsers.length < limit) {
-    //   filter.services = {
-    //     $elemMatch: {
-    //       $or: [
-    //         { expiredAt: { $exists: false } },
-    //         { expiredAt: { $lt: new Date() } },
-    //       ],
-    //     },
-    //   };
-    //   const users = await this.userModel
-    //     .find(filter)
-    //     .select('-password')
-    //     .sort({ raisedAt: -1 })
-    //     .limit(limit - topUsers.length);
+    if (topUsers.length < limit) {
+      const users = await this.userModel
+        .find({
+          ...filter,
+          $nor: [
+            {
+              services: {
+                $elemMatch: {
+                  _id: TOP_ID,
+                  expiredAt: { $gt: new Date() }
+                }
+              }
+            }
+          ]
+        })
+        .select('-password')
+        .sort({ raisedAt: -1, updatedAt: -1, createdAt: -1 })
+        .limit(100 - topUsers.length);
 
-    //   return [...topUsers, ...users];
-    // }
+      return [...topUsers, ...users];
+    }
 
     return [...topUsers];
   }
@@ -481,6 +474,7 @@ export class UserService {
           ? servicesOptions[2]?.period
           : '',
     });
+
     await this.buyService({
       userId,
       serviceId: services[3]?._id,
@@ -492,5 +486,33 @@ export class UserService {
           ? servicesOptions[3]?.period
           : '',
     });
+  }
+
+  async useRaiseProfile(id) {
+    const user = await this.userModel.findOne({ _id: id });
+
+    if (!user)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    // @ts-ignore
+    const canActivate = user?.services?.find((s: any) => s?._id === RAISE_ID)?.quantity > 0;
+
+    if (!canActivate) return null;
+
+    const services = user?.services?.map((s: any) => {
+      if (s._id === RAISE_ID) {
+        return { ...s, quantity: +s.quantity - 1 };
+      }
+
+      return s;
+    });
+
+    return this.userModel
+      .findOneAndUpdate(
+        { _id: id },
+        { ...user, raisedAt: new Date(Date.now()), services },
+        { new: true },
+      )
+      .exec();
   }
 }
