@@ -346,8 +346,6 @@ export class UserService {
       (s: any) => s._id === serviceId,
     );
 
-    console.log('existingService', existingService);
-
     let userServices = [...user?.services];
     
     let changedServices: any = {
@@ -361,7 +359,6 @@ export class UserService {
         expiredAt: period ? this.getExpiredDate(period) : null,
       };
 
-      const arr = userServices.filter((s: any) => s._id != serviceId)
       userServices = [newService, ...arr];
     } else {
       if (existingService?.expiredAt) {
@@ -369,15 +366,18 @@ export class UserService {
           period,
           new Date(existingService.expiredAt),
         ) : null;
+
         userServices = userServices.filter(
-          (s: any) => s.serviceId !== serviceId,
+          (s: any) => s._id !== serviceId,
         );
+
         userServices = [changedServices, ...userServices];
       }
       if (existingService?.quantity) {
         changedServices.quantity = +existingService.quantity + +quantity;
+        
         userServices = userServices.filter(
-          (s: any) => s.serviceId !== serviceId,
+          (s: any) => s._id !== serviceId,
         );
         userServices = [changedServices, ...userServices];
       }
