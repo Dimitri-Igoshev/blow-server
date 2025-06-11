@@ -25,7 +25,7 @@ export class Gateway implements OnModuleInit {
   onNewMessage(@MessageBody() body: unknown) {
     this.server.emit('onMessage', {
       msg: 'New message',
-      content: body,
+      content: {},
     });
   }
 }
