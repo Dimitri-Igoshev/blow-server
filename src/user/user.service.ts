@@ -105,11 +105,11 @@ export class UserService {
               services: {
                 $elemMatch: {
                   _id: TOP_ID,
-                  expiredAt: { $gt: new Date() }
-                }
-              }
-            }
-          ]
+                  expiredAt: { $gt: new Date() },
+                },
+              },
+            },
+          ],
         })
         .select('-password')
         .sort({ raisedAt: -1, updatedAt: -1, createdAt: -1 })
@@ -312,7 +312,7 @@ export class UserService {
       .exec();
   }
 
-  getExpiredDate(period: string, currentDate = new Date()) {
+  getExpiredDate(period: string, currentDate = new Date(Date.now())) {
     switch (period) {
       case ServicePeriod.DAY:
         currentDate.setDate(currentDate.getDate() + 1);
@@ -393,8 +393,12 @@ export class UserService {
       userServices = [newService, ...userServices];
     } else {
       if (period) {
+        const date =
+          new Date(existingService.expiredAt) < new Date(Date.now())
+            ? new Date(Date.now())
+            : new Date(existingService.expiredAt);
         changedServices.expiredAt = period
-          ? this.getExpiredDate(period, new Date(existingService.expiredAt))
+          ? this.getExpiredDate(period, date)
           : null;
 
         userServices = userServices.filter((s: any) => s._id !== serviceId);
@@ -490,11 +494,11 @@ export class UserService {
   async useRaiseProfile(id) {
     const user = await this.userModel.findOne({ _id: id });
 
-    if (!user)
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id === RAISE_ID)?.quantity > 0;
+    const canActivate =
+      user?.services?.find((s: any) => s?._id === RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
