@@ -11,6 +11,8 @@ import { TransactionModule } from './transaction/transaction.module';
 import { ServicesModule } from './services/services.module';
 import { ChatModule } from './chat/chat.module';
 import { MailingModule } from './mailing/mailing.module';
+import { PaymentModule } from './payment/payment.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { MailingModule } from './mailing/mailing.module';
     ServicesModule,
     ChatModule,
     MailingModule,
+    PaymentModule,
+    HttpModule,
   ],
 })
 export class AppModule {}
