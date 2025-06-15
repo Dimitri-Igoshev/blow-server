@@ -12,9 +12,21 @@ export class PaymentService {
       Authorization: process.env.OVERPAY_BASIC_AUTH,
     };
 
-    const response$ = this.httpService.post(url, data, { headers });
+    //Создать транзакцию для пользователя и отслеживать ее (tracking_id, сумма, статус, способ оплаты)
+
+    const response$ = this.httpService.post(
+      url,
+      { checkout: data?.checkout },
+      { headers },
+    );
     const response = await lastValueFrom(response$);
     return response.data;
+  }
+
+  async handleNotification(data: any): Promise<any> {
+    //Получить ответ и исходя из этого либо поменять статус транзакции, либо зачислить средства.
+
+    console.log(data);
   }
 
   // paymentResponse(response: any) {}

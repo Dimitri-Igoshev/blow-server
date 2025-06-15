@@ -10,6 +10,11 @@ export class PaymentController {
     return this.paymentService.createChekout(data);
   }
 
+  @Post('notification')
+  paymentNotification(@Body() data: any) {
+    return this.paymentService.handleNotification(data);
+  }
+
   // @Get()
   // findAll() {
   //   return this.paymentService.findAll();
