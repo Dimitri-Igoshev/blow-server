@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsBoolean } from 'class-validator';
 
 export class EditMessageDto {
   @IsString()
@@ -11,4 +11,8 @@ export class EditMessageDto {
   @IsOptional()
   @IsString()
   fileUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isReaded?: boolean;
 }

@@ -70,7 +70,6 @@ export class ChatService {
     return this.messageModel
       .find({ chat: chatId })
       .populate([{ path: 'sender', model: 'User' }])
-      .sort({ updatedAt: 1 })
       .exec();
   }
 
