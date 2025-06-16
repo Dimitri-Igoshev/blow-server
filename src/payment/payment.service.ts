@@ -2,14 +2,15 @@ import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { lastValueFrom } from 'rxjs';
 import {
   Transaction,
   TransactionMethod,
+  TransactionStatus,
   TransactionType,
 } from 'src/transaction/entities/transaction.entity';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
+import axios from 'axios';
 
 @Injectable()
 export class PaymentService {
@@ -26,36 +27,54 @@ export class PaymentService {
       Authorization: process.env.OVERPAY_BASIC_AUTH,
     };
 
-    this.createTransaction(data);
+    await this.createTransaction(data);
 
-    const response$ = this.httpService.post(
+    const response = await axios.post(
       url,
       { checkout: data?.checkout },
       { headers },
     );
-    const response = await lastValueFrom(response$);
+
     return response.data;
   }
 
   async handleNotification(data: any): Promise<any> {
-    //Получить ответ и исходя из этого либо поменять статус транзакции, либо зачислить средства.
+    const user = await this.userService.getUserByTransactionTracingNumber(
+      data?.transaction?.tracking_id,
+    );
+
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     if (data?.transaction?.status === 'successful') {
       this.userService.addBalance({
-        id: data?.transaction?.user_id,
-        sum: data?.transaction?.amount,
+        id: user?._id?.toString() || '',
+        sum: +data?.transaction?.amount / 100,
+      });
+    } else if (data?.transaction?.status === 'failed') {
+      await this.transactionModel
+        .findOneAndUpdate(
+          { trackingId: data?.transaction?.tracking_id },
+          {
+            status: TransactionStatus.FAILED,
+          },
+          { new: true },
+        )
+        .exec();
+      this.userService.addBalance({
+        id: user?._id?.toString() || '',
+        sum: 0,
       });
     }
   }
 
   async createTransaction(data: any) {
-    const user = await this.userService.findOne(data.payerId);
+    const user = await this.userService.findOne(data?.payerId || '');
 
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     const transaction = new this.transactionModel({
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date(Date.now()),
+      updatedAt: new Date(Date.now()),
       userId: data?.payerId,
       type: TransactionType.CREDIT,
       method: TransactionMethod.CARD,
@@ -69,7 +88,7 @@ export class PaymentService {
     return await this.userModel
       .findOneAndUpdate(
         { _id: data.payerId },
-        { transactions: [newTransaction, ...user.transactions]},
+        { transactions: [newTransaction, ...user.transactions] },
         { new: true },
       )
       .exec();

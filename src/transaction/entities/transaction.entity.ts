@@ -13,6 +13,7 @@ export enum TransactionStatus {
   NEW = 'new',
   PAID = 'paid',
   REJECTED = 'rejected',
+  FAILED = 'failed',
 }
 
 export enum TransactionMethod {

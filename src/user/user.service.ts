@@ -283,6 +283,12 @@ export class UserService {
     return this.userModel.findOne({ resetToken: token }).exec();
   }
 
+  getUserByTransactionTracingNumber(trackingId: string) {
+    return this.userModel
+      .findOne({ 'transactions.trackingId': trackingId })
+      .exec();
+  }
+
   async addBalance({ id, sum }: { id: string; sum: number }) {
     const user = await this.findOne(id);
 

@@ -10,7 +10,7 @@ export class PaymentController {
     return this.paymentService.createChekout(data);
   }
 
-  @Post('notification')
+  @Post('/notification')
   paymentNotification(@Body() data: any) {
     return this.paymentService.handleNotification(data);
   }
