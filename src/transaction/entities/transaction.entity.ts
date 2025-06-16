@@ -54,6 +54,9 @@ export class Transaction {
 
   @Prop({ type: String })
   description: string;
+
+  @Prop({ type: String })
+  trackingId: string;
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);
