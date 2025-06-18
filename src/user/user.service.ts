@@ -10,6 +10,7 @@ import { FileService } from 'src/file/file.service';
 import {
   Transaction,
   TransactionMethod,
+  TransactionStatus,
   TransactionType,
 } from 'src/transaction/entities/transaction.entity';
 import { ServicePeriod } from 'src/services/entities/service.entity';
@@ -301,12 +302,11 @@ export class UserService {
       type: TransactionType.CREDIT,
       method: TransactionMethod.TEST,
       sum: +sum,
+      status: TransactionStatus.PAID,
       description: `Пополнение баланса на ${sum}`,
     });
 
     const newTransaction = await transaction.save();
-
-    console.log(newTransaction, user?.balance ? +user.balance + sum : sum);
 
     return await this.userModel
       .findOneAndUpdate(
