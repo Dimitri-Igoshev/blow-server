@@ -306,6 +306,8 @@ export class UserService {
 
     const newTransaction = await transaction.save();
 
+    console.log(newTransaction, user?.balance ? +user.balance + sum : sum);
+
     return await this.userModel
       .findOneAndUpdate(
         { _id: id },

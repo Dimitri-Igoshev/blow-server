@@ -10,7 +10,6 @@ import {
 } from 'src/transaction/entities/transaction.entity';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
-import axios from 'axios';
 
 @Injectable()
 export class PaymentService {
@@ -22,30 +21,38 @@ export class PaymentService {
   ) {}
 
   async createChekout(data: any): Promise<any> {
-    const url = process.env.OVERPAY_CHECKOUT_URL || '';
-    const headers = {
-      Authorization: process.env.OVERPAY_BASIC_AUTH,
-    };
+    // const url = process.env.OVERPAY_CHECKOUT_URL || '';
+    // const headers = {
+    //   Authorization: process.env.OVERPAY_BASIC_AUTH,
+    // };
 
     await this.createTransaction(data);
 
-    const response = await axios.post(
-      url,
-      { checkout: data?.checkout },
-      { headers },
-    );
+    // const response = await axios.post(
+    //   url,
+    //   { checkout: data?.checkout },
+    //   { headers },
+    // );
 
-    return response.data;
+    // return response.data;
   }
 
   async handleNotification(data: any): Promise<any> {
-    const user = await this.userService.getUserByTransactionTracingNumber(
-      data?.transaction?.tracking_id,
+    const transaction = await this.transactionModel
+      .findOne({ trackingId: data?.transaction?.tracking_id })
+      .exec();
+
+    if (!transaction)
+      throw new HttpException('Transaction not found', HttpStatus.NOT_FOUND);
+
+    const user = await this.userService.findOne(
+      transaction?.userId.toString() || '',
     );
 
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     if (data?.transaction?.status === 'successful') {
+
       this.userService.addBalance({
         id: user?._id?.toString() || '',
         sum: +data?.transaction?.amount / 100,
