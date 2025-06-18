@@ -53,7 +53,7 @@ export class PaymentService {
 
     if (data?.transaction?.status === 'successful') {
 
-      this.userService.addBalance({
+      return await this.userService.addBalance({
         id: user?._id?.toString() || '',
         sum: +data?.transaction?.amount / 100,
       });
