@@ -60,7 +60,15 @@ export class UserService {
     }
   }
 
-  async findAll({ online, sex, city, minage, maxage, limit = 12 }) {
+  async findAll({
+    online,
+    sex,
+    city,
+    minage,
+    maxage,
+    withPhoto = false,
+    limit = 12,
+  }) {
     const filter: any = {};
 
     if (online) {
@@ -75,6 +83,7 @@ export class UserService {
         $gte: parseInt(minage || 0),
         $lte: parseInt(maxage || 150),
       };
+    if (withPhoto) filter.photos = { $exists: true, $not: { $size: 0 } };
 
     const topUsers = await this.userModel
       .find({
@@ -505,7 +514,8 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id === RAISE_ID)?.quantity > 0;
+    const canActivate =
+      user?.services?.find((s: any) => s?._id === RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 

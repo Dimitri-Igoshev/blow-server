@@ -38,6 +38,7 @@ export class PaymentService {
   }
 
   async handleNotification(data: any): Promise<any> {
+    console.log('ku', data)
     const transaction = await this.transactionModel
       .findOne({ trackingId: data?.transaction?.tracking_id })
       .exec();
