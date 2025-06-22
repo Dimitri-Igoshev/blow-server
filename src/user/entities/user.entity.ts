@@ -132,7 +132,7 @@ export class User {
   @Prop()
   notes: INote[];
 
-  @Prop()
+  @Prop({ default: 0 })
   balance: number;
 
   @Prop([

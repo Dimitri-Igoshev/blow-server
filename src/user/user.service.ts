@@ -19,6 +19,7 @@ import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
 const RAISE_ID = '6830b4d752bb4caefa041497';
+const PREMIUM_ID = '6831be446c59cd4bad808bb5';
 
 @Injectable()
 export class UserService {
@@ -45,7 +46,15 @@ export class UserService {
 
     const savedUser = await newUser.save();
 
-    if (!file) return data;
+    await this.buyService({
+      userId: savedUser?._id.toString(),
+      price: 0,
+      serviceId: PREMIUM_ID,
+      quantity: 0,
+      period: ServicePeriod.DAY,
+    });
+
+    if (!file) return savedUser;
 
     const uploaded = await this.fileService.saveFile([file]);
 
@@ -514,12 +523,12 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id === RAISE_ID)?.quantity > 0;
+    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
     const services = user?.services?.map((s: any) => {
-      if (s._id === RAISE_ID) {
+      if (s._id == RAISE_ID) {
         return { ...s, quantity: +s.quantity - 1 };
       }
 
