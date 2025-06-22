@@ -46,7 +46,7 @@ export class UserController {
     @Query('city') city: string,
     @Query('minage') minage: string,
     @Query('maxage') maxage: string,
-    @Query('withPhoto') withPhoto: boolean,
+    @Query('withPhoto') withPhoto: string,
     @Query('limit') limit: number,
   ) {
     return this.userService.findAll({

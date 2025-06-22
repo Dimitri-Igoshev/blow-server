@@ -66,7 +66,7 @@ export class UserService {
     city,
     minage,
     maxage,
-    withPhoto = false,
+    withPhoto = '',
     limit = 12,
   }) {
     const filter: any = {};
