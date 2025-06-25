@@ -13,6 +13,8 @@ import { ChatModule } from './chat/chat.module';
 import { MailingModule } from './mailing/mailing.module';
 import { PaymentModule } from './payment/payment.module';
 import { HttpModule } from '@nestjs/axios';
+import { MailerModule } from '@nestjs-modules/mailer'
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter'
 
 @Module({
   imports: [
@@ -23,6 +25,29 @@ import { HttpModule } from '@nestjs/axios';
         uri: configService.get<string>('MONGODB_URI'),
       }),
       inject: [ConfigService],
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.timeweb.ru',
+        port: 25,
+        ignoreTLS: true,
+        secure: false,
+        auth: {
+          user: 'support@blow.ru',
+          pass: 'g0ak9wyq47',
+        },
+      },
+      defaults: {
+        from: '"No Reply" <no-reply@localhost>',
+      },
+      preview: false,
+      template: {
+        dir: process.cwd() + '/template/',
+        adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
+        options: {
+          strict: true,
+        },
+      },
     }),
     AuthModule,
     MailModule,

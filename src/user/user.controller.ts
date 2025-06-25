@@ -122,7 +122,7 @@ export class UserController {
 
   @UseGuards(JwtGuard)
   @Post('test/add-balance')
-  addBalance(@Body() data: { id: string, sum: number }) {
+  addBalance(@Body() data: { id: string; sum: number }) {
     return this.userService.addBalance(data);
   }
 

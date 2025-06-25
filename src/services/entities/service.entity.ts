@@ -34,11 +34,13 @@ export class Service {
   @Prop({ type: String, enum: ServiceType, default: ServiceType.SINGLE })
   type: ServiceType;
 
-  @Prop([{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Service',
-    default: null,
-  }])
+  @Prop([
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Service',
+      default: null,
+    },
+  ])
   services: string[];
 
   @Prop()

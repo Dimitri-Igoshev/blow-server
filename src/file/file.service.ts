@@ -9,7 +9,7 @@ import { MFile } from './mfile.class';
 @Injectable()
 export class FileService {
   getFileName(file: MFile): string {
-    if (!file?.originalname) return ''
+    if (!file?.originalname) return '';
 
     const fileStrArr = file.originalname.split('.');
     const fileType = fileStrArr[fileStrArr.length - 1];
@@ -21,7 +21,6 @@ export class FileService {
   }
 
   async saveFile(files: MFile[]): Promise<FileResponseEl[]> {
-
     const dateFolder = format(new Date(), 'yyyy-MM-dd');
     const uploadFolder = `${path}/uploads/${dateFolder}`;
     await ensureDir(uploadFolder);
@@ -37,7 +36,7 @@ export class FileService {
         const buffer = await this.convertToWebP(file.buffer);
 
         // @ts-ignore
-        convertedFiles = [{originalname: `${file.originalname.split('.')[0]}.webp`, buffer}];
+        convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer },];
       }
 
       // let resizedFiles = [];

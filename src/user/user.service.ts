@@ -15,6 +15,7 @@ import {
 } from 'src/transaction/entities/transaction.entity';
 import { ServicePeriod } from 'src/services/entities/service.entity';
 import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
+import { MailerService } from '@nestjs-modules/mailer';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -26,6 +27,7 @@ export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Transaction.name) private transactionModel: Model<Transaction>,
+    private readonly mailerService: MailerService,
     private readonly fileService: FileService,
   ) {}
 
@@ -300,6 +302,10 @@ export class UserService {
 
   getUserByResetToken(token: string) {
     return this.userModel.findOne({ resetToken: token }).exec();
+  }
+
+  getUserByConfirmToken(token: string) {
+    return this.userModel.findOne({ confirmToken: token }).exec();
   }
 
   getUserByTransactionTracingNumber(trackingId: string) {

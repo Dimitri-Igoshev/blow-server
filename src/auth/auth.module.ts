@@ -7,12 +7,17 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { FileService } from 'src/file/file.service';
-import { MailService } from 'src/mail/mail.service';
-import { Transaction, TransactionSchema } from 'src/transaction/entities/transaction.entity';
+import {
+  Transaction,
+  TransactionSchema,
+} from 'src/transaction/entities/transaction.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }, { name: Transaction.name, schema: TransactionSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Transaction.name, schema: TransactionSchema },
+    ]),
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
@@ -20,6 +25,6 @@ import { Transaction, TransactionSchema } from 'src/transaction/entities/transac
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserService, MailService, FileService],
+  providers: [AuthService, UserService, FileService],
 })
 export class AuthModule {}

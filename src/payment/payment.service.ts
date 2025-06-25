@@ -38,7 +38,7 @@ export class PaymentService {
   }
 
   async handleNotification(data: any): Promise<any> {
-    console.log('ku', data)
+    console.log('ku', data);
     const transaction = await this.transactionModel
       .findOne({ trackingId: data?.transaction?.tracking_id })
       .exec();
@@ -53,7 +53,6 @@ export class PaymentService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     if (data?.transaction?.status === 'successful') {
-
       return await this.userService.addBalance({
         id: user?._id?.toString() || '',
         sum: +data?.transaction?.amount / 100,

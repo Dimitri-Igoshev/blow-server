@@ -3,5 +3,5 @@ import { Gateway } from './gateway';
 
 @Module({})
 export class GatewayModule {
-  providers: [Gateway]
+  providers: [Gateway];
 }

@@ -1,11 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Ip, Req, HostParam, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Ip,
+  Req,
+  HostParam,
+  Query,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RealIP } from 'nestjs-real-ip';
 import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   // @Get('get-ip')
   // get(@RealIP() ip: string, @Req() req: any): string {
@@ -23,10 +35,15 @@ export class AuthController {
     return this.authService.registration(data);
   }
 
-  // @Post('recovery-password')
-  // recovery(@Body() data: { email: string }, @Query('lang') lang: string) {
-  //   return this.authService.recoveryPassword(data.email, lang);
-  // }
+  @Post('confirmation')
+  confirmation(@Body() data: { token: string }) {
+    return this.authService.confirmation(data.token);
+  }
+
+  @Post('recovery-password')
+  recovery(@Body() data: { email: string }) {
+    return this.authService.recoveryPassword(data.email);
+  }
 
   @Post('reset-password')
   reset(@Body() data: { password: string; token: string }) {

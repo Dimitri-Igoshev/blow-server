@@ -15,31 +15,33 @@ export class ServicesService {
     const isExist = await this.serviceModel.findOne({ name: data.name });
 
     if (isExist)
-      throw new HttpException('Service with this name is already exists', HttpStatus.CONFLICT);
+      throw new HttpException(
+        'Service with this name is already exists',
+        HttpStatus.CONFLICT,
+      );
 
     const newService = new this.serviceModel(data);
     return await newService.save();
   }
 
   async findAll() {
-    return await this.serviceModel.find()
+    return await this.serviceModel
+      .find()
       .sort({ order: -1 })
       .populate([{ path: 'services', model: 'Service' }])
       .exec();
   }
 
   findOne(id: string) {
-    return this.serviceModel.findOne({ _id: id })
+    return this.serviceModel
+      .findOne({ _id: id })
       .populate([{ path: 'services', model: 'Service' }])
       .exec();
   }
 
   update(id: string, data: UpdateServiceDto) {
-    return this.serviceModel.findOneAndUpdate(
-      { _id: id }, 
-      { ...data }, 
-      { new: true }
-    )
+    return this.serviceModel
+      .findOneAndUpdate({ _id: id }, { ...data }, { new: true })
       .exec();
   }
 

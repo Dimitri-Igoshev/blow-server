@@ -1,8 +1,8 @@
 export interface IPhoto {
-  _id?: string
+  _id?: string;
   url?: string;
   priority?: number;
   main?: boolean;
   name?: string;
-  file?: File | null
+  file?: File | null;
 }

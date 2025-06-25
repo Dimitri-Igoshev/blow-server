@@ -6,8 +6,8 @@ import { Mailing, MailingSchema } from './entities/mailing.entity';
 
 @Module({
   imports: [
-      MongooseModule.forFeature([{ name: Mailing.name, schema: MailingSchema }]),
-    ],
+    MongooseModule.forFeature([{ name: Mailing.name, schema: MailingSchema }]),
+  ],
   controllers: [MailingController],
   providers: [MailingService],
 })

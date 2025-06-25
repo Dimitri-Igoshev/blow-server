@@ -18,7 +18,7 @@ export enum TransactionStatus {
 
 export enum TransactionMethod {
   TEST = 'test',
-  
+
   PAYPAL = 'paypal',
   CARD = 'card',
   BANK_TRANSFER = 'bank-transfer',
@@ -44,7 +44,11 @@ export class Transaction {
   @Prop({ type: String, enum: TransactionType, default: TransactionType.DEBIT })
   type: TransactionType;
 
-  @Prop({ type: String, enum: TransactionStatus, default: TransactionStatus.NEW })
+  @Prop({
+    type: String,
+    enum: TransactionStatus,
+    default: TransactionStatus.NEW,
+  })
   status: TransactionStatus;
 
   @Prop({ type: String })
