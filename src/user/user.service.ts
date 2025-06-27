@@ -536,17 +536,20 @@ export class UserService {
     if (!canActivate) return null;
 
     const services = user?.services?.map((s: any) => {
-      if (s._id == RAISE_ID) {
+      if (s._id === RAISE_ID) {
         return { ...s, quantity: +s.quantity - 1 };
       }
 
       return s;
     });
 
-    return this.userModel
+    return await this.userModel
       .findOneAndUpdate(
         { _id: id },
-        { ...user, raisedAt: new Date(Date.now()), services },
+        {
+          raisedAt: new Date(Date.now()),
+          services: [...services ],
+        },
         { new: true },
       )
       .exec();
