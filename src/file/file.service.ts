@@ -81,7 +81,7 @@ export class FileService {
         const buffer = await this.convertBufferToMp3(file.buffer);
 
         // @ts-ignore
-        convertedFiles = [{originalname: `${file.originalname.split('.')[0]}.mp3`, buffer: buffer}];
+        convertedFiles = [{originalname: `${file.originalname.split('.')[0]}.mp3`, buffer}];
       }
 
       // let resizedFiles = [];

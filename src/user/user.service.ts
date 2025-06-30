@@ -168,7 +168,7 @@ export class UserService {
         const urls = media.map((el) => el.url);
         const imageUrls = urls.filter((i) => i.includes('.webp'));
         const videoUrl = urls.filter((i) => i.includes('video'));
-        const voice = urls.filter((i) => i.includes('.mp4'));
+        const voice = urls.filter((i) => i.includes('.mp3'));
 
         const images = imageUrls.map((i: string, idx: number) => ({
           url: i,
