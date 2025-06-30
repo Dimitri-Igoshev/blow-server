@@ -5,6 +5,7 @@ import { path } from 'app-root-path';
 import { ensureDir, writeFile } from 'fs-extra';
 import * as sharp from 'sharp';
 import { MFile } from './mfile.class';
+import { buffer } from 'stream/consumers'
 
 @Injectable()
 export class FileService {
@@ -37,6 +38,11 @@ export class FileService {
 
         // @ts-ignore
         convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer },];
+      }
+
+      if (file?.buffer && file?.mimetype?.includes('audio')) {
+        // @ts-ignore
+        convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.mp4`, buffer: file.buffer },];
       }
 
       // let resizedFiles = [];

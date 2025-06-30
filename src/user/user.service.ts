@@ -168,6 +168,7 @@ export class UserService {
         const urls = media.map((el) => el.url);
         const imageUrls = urls.filter((i) => i.includes('.webp'));
         const videoUrl = urls.filter((i) => i.includes('video'));
+        const voice = urls.filter((i) => i.includes('.mp4'));
 
         const images = imageUrls.map((i: string, idx: number) => ({
           url: i,
@@ -181,6 +182,7 @@ export class UserService {
             {
               photos: [...result.photos, ...images],
               videoUrl: videoUrl[0],
+              voice: voice[0],
             },
             { new: true },
           )
@@ -548,7 +550,7 @@ export class UserService {
         { _id: id },
         {
           raisedAt: new Date(Date.now()),
-          services: [...services ],
+          services: [...services],
         },
         { new: true },
       )
