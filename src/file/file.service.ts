@@ -5,10 +5,47 @@ import { path } from 'app-root-path';
 import { ensureDir, writeFile } from 'fs-extra';
 import * as sharp from 'sharp';
 import { MFile } from './mfile.class';
-import { buffer } from 'stream/consumers'
+import * as ffmpeg from 'fluent-ffmpeg';
+import * as ffmpegPath from 'ffmpeg-static';
+import * as stream from 'stream';
 
 @Injectable()
 export class FileService {
+  constructor() {
+    ffmpeg.setFfmpegPath(ffmpegPath); // Устанавливаем путь к ffmpeg
+  }
+
+  // Метод для конвертации буфера в MP3
+  // Метод для конвертации буфера в MP3
+  async convertBufferToMp3(inputBuffer: Buffer): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      // Для того чтобы TS не ругался, указываем тип потока явно
+      const outputBuffer: Buffer[] = []; // Массив для накопления данных
+      const passthroughStream = new stream.PassThrough(); // PassThrough stream
+
+      // Создаем поток для входящего буфера
+      const inputStream = new stream.PassThrough();
+      inputStream.end(inputBuffer); // Загоняем буфер в поток
+
+      // Используем ffmpeg для конвертации
+      ffmpeg(inputStream)
+        .audioCodec('libmp3lame') // Кодек для MP3
+        .toFormat('mp3') // Формат MP3
+        .on('end', () => {
+          resolve(Buffer.concat(outputBuffer)); // Объединяем буферы в один
+        })
+        .on('error', (err: Error) => {
+          reject(err); // Обработка ошибок
+        })
+        .pipe(passthroughStream); // Прокачиваем поток через PassThrough
+
+      // Собираем данные в буфер
+      passthroughStream.on('data', (chunk: Buffer) => {
+        outputBuffer.push(chunk); // Добавляем чанки в итоговый буфер
+      });
+    });
+  }
+
   getFileName(file: MFile): string {
     if (!file?.originalname) return '';
 
@@ -37,12 +74,14 @@ export class FileService {
         const buffer = await this.convertToWebP(file.buffer);
 
         // @ts-ignore
-        convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer },];
+        convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
       }
 
       if (file?.buffer && file?.mimetype?.includes('audio')) {
+        const buffer = await this.convertBufferToMp3(file.buffer);
+
         // @ts-ignore
-        convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.mp4`, buffer: file.buffer },];
+        convertedFiles = [{originalname: `${file.originalname.split('.')[0]}.mp3`, buffer: buffer}];
       }
 
       // let resizedFiles = [];
