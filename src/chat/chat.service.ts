@@ -65,6 +65,18 @@ export class ChatService {
     return await this.chatModel.findByIdAndDelete(id).exec();
   }
 
+  async deleteUserChats(userId: string): Promise<any> {
+    const chats = await this.chatModel
+      .find({ $or: [{ sender: userId }, { recipient: userId }] })
+      .exec();
+
+    const chatIds = chats.map((c) => c._id);
+
+    await this.messageModel.deleteMany({ chat: { $in: chatIds } }).exec();
+
+    return await this.chatModel.deleteMany({ _id: { $in: chatIds } }).exec();
+  }
+
   async getMessagesByChatId(chatId): Promise<Message[]> {
     console.log(chatId);
     return this.messageModel
