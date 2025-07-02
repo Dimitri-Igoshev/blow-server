@@ -49,4 +49,9 @@ export class ChatController {
   removeChat(@Param('id') id: string) {
     return this.chatService.deleteChat(id);
   }
+
+  @Delete('user/:id')
+  removeUserChats(@Param('id') id: string) {
+    return this.chatService.deleteUserChats(id);
+  }
 }
