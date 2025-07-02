@@ -58,6 +58,10 @@ export class FileService {
     return sharp(file).webp().toBuffer();
   }
 
+  convertHeicToJpeg(file: Buffer): Promise<Buffer> {
+    return sharp(file).jpeg().toBuffer();
+  }
+
   async saveFile(files: MFile[]): Promise<FileResponseEl[]> {
     const dateFolder = format(new Date(), 'yyyy-MM-dd');
     const uploadFolder = `${path}/uploads/${dateFolder}`;
