@@ -83,6 +83,7 @@ export class UserService {
     withPhoto = '',
     limit = 12,
   }) {
+    limit = parseInt(String(limit), 10);
     const filter: any = { status: UserStatus.ACTIVE };
 
     if (online) {
