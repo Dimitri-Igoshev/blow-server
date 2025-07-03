@@ -112,7 +112,7 @@ export class UserService {
                 {
                   $size: {
                     $filter: {
-                      input: '$services',
+                      input: { $ifNull: ['$services', []] },
                       as: 's',
                       cond: {
                         $and: [
