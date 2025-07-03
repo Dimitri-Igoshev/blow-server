@@ -1,11 +1,7 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
 } from '@nestjs/common';
 import { ClaimService } from './claim.service';
 import { CreateClaimDto } from './dto/create-claim.dto';

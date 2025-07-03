@@ -9,6 +9,7 @@ export enum UserStatus {
   NEW = 'new',
   ACTIVE = 'active',
   INACTIVE = 'inactive',
+  ARHIVE = 'archive',
 }
 
 export enum UserRole {

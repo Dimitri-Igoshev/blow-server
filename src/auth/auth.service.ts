@@ -54,13 +54,22 @@ export class AuthService {
   async registration(data: LoginDto) {
     const isExist = await this.userService.getUserByEmail(data.email);
 
-    if (isExist)
+    if (isExist && isExist.status !== UserStatus.ARHIVE)
       throw new HttpException('User is already exists', HttpStatus.CONFLICT);
 
-    const res = await this.userService.create({
-      ...data,
-      status: UserStatus.NEW,
-    });
+    let res;
+
+    if (isExist && isExist.status === UserStatus.ARHIVE) {
+      res = await this.userService.update(isExist._id.toString(), {
+        ...data,
+        status: UserStatus.NEW,
+      });
+    } else {
+      res = await this.userService.create({
+        ...data,
+        status: UserStatus.NEW,
+      });
+    }
 
     if (!res)
       throw new HttpException('Server error', HttpStatus.INTERNAL_SERVER_ERROR);
