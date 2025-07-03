@@ -59,7 +59,10 @@ export class FileService {
   }
 
   convertHeicToJpeg(file: Buffer): Promise<Buffer> {
-    return sharp(file).jpeg().toBuffer();
+    console.log(0, file);
+    const res = sharp(file).jpeg().toBuffer();
+    console.log(1, res);
+    return res;
   }
 
   async saveFile(files: MFile[]): Promise<FileResponseEl[]> {
@@ -85,12 +88,11 @@ export class FileService {
         const buffer = await this.convertBufferToMp3(file.buffer);
 
         // @ts-ignore
-        convertedFiles = [{originalname: `${file.originalname.split('.')[0]}.mp3`, buffer}];
+        convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.mp3`, buffer }];
       }
 
       // let resizedFiles = [];
 
-      //
       //   const buffer = await this.convertToWebP(file.buffer);
       //   resizedFiles = [
       //     {
