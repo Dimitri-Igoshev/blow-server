@@ -16,11 +16,14 @@ import {
 import { ServicePeriod } from 'src/services/entities/service.entity';
 import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import mongoose from 'mongoose';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
 const RAISE_ID = '6830b4d752bb4caefa041497';
 const PREMIUM_ID = '6831be446c59cd4bad808bb5';
+
+const topIdObject = new mongoose.Types.ObjectId(TOP_ID);
 
 @Injectable()
 export class UserService {
@@ -103,7 +106,7 @@ export class UserService {
         ...filter,
         services: {
           $elemMatch: {
-            _id: TOP_ID,
+            _id: topIdObject,
             expiredAt: { $gt: new Date(Date.now()) },
           },
         },
