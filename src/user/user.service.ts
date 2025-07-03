@@ -117,7 +117,7 @@ export class UserService {
                       as: 's',
                       cond: {
                         $and: [
-                          { $eq: ['$$s._id', TOP_ID] },
+                          { $eq: [{ $toString: '$$s._id' }, TOP_ID] },
                           { $gt: ['$$s.expiredAt', now] },
                         ],
                       },
@@ -374,6 +374,7 @@ export class UserService {
     quantity = 0,
     period,
   }: BuyServiceDto) {
+    serviceId = serviceId.toString();
     const user = await this.userModel.findOne({ _id: userId });
 
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
