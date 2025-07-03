@@ -80,9 +80,7 @@ export class UserService {
     withPhoto = '',
     limit = 12,
   }) {
-    const filter: any = {
-      status: UserStatus.ACTIVE,
-    };
+    const filter: any = { status: UserStatus.ACTIVE };
 
     if (online) {
       const fiveMinuteAgo = new Date(Date.now() - 300 * 1000);
@@ -91,57 +89,49 @@ export class UserService {
 
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
-    if (minage || maxage)
+    if (minage || maxage) {
       filter.age = {
-        $gte: parseInt(minage || 0),
-        $lte: parseInt(maxage || 150),
+        $gte: parseInt(minage || '0', 10),
+        $lte: parseInt(maxage || '150', 10),
       };
+    }
     if (withPhoto) filter.photos = { $exists: true, $not: { $size: 0 } };
 
-    const topUsers = await this.userModel
-      .find({
-        ...filter,
-        services: {
-          $elemMatch: {
-            _id: TOP_ID,
-            expiredAt: { $gt: new Date(Date.now()) },
+    const now = new Date();
+
+    const users = await this.userModel
+      .aggregate([
+        { $match: filter },
+        {
+          $addFields: {
+            isTop: {
+              $gt: [
+                {
+                  $size: {
+                    $filter: {
+                      input: '$services',
+                      as: 's',
+                      cond: {
+                        $and: [
+                          { $eq: ['$$s._id', TOP_ID] },
+                          { $gt: ['$$s.expiredAt', now] },
+                        ],
+                      },
+                    },
+                  },
+                },
+                0,
+              ],
+            },
           },
         },
-      })
-      // .or([
-      //   { firstName: { $regex: search, $options: 'i' } },
-      //   { lastName: { $regex: search, $options: 'i' } },
-      //   { email: { $regex: search, $options: 'i' } },
-      // ])
-      .select('-password')
-      .sort({ raisedAt: -1, updatedAt: -1, createdAt: -1 })
-      .limit(limit)
-      // .populate([{ path: 'projects', model: 'Project' }])
+        { $sort: { isTop: -1, raisedAt: -1, updatedAt: -1, createdAt: -1 } },
+        { $limit: limit },
+        { $project: { password: 0 } },
+      ])
       .exec();
 
-    if (topUsers.length < limit) {
-      const users = await this.userModel
-        .find({
-          ...filter,
-          $nor: [
-            {
-              services: {
-                $elemMatch: {
-                  _id: TOP_ID,
-                  expiredAt: { $gt: new Date() },
-                },
-              },
-            },
-          ],
-        })
-        .select('-password')
-        .sort({ raisedAt: -1, updatedAt: -1, createdAt: -1 })
-        .limit(limit - topUsers.length);
-
-      return [...topUsers, ...users];
-    }
-
-    return [...topUsers];
+    return users;
   }
 
   async findOne(id: string) {
