@@ -8,14 +8,14 @@ import { MFile } from './mfile.class';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as ffmpegPath from 'ffmpeg-static';
 import * as stream from 'stream';
+import * as convert from 'heic-convert';
 
 @Injectable()
 export class FileService {
   constructor() {
     ffmpeg.setFfmpegPath(ffmpegPath); // Устанавливаем путь к ffmpeg
   }
-
-  // Метод для конвертации буфера в MP3
+  
   // Метод для конвертации буфера в MP3
   async convertBufferToMp3(inputBuffer: Buffer): Promise<Buffer> {
     return new Promise((resolve, reject) => {
@@ -58,11 +58,13 @@ export class FileService {
     return sharp(file).webp().toBuffer();
   }
 
-  convertHeicToJpeg(file: Buffer): Promise<Buffer> {
-    console.log(0, file);
-    const res = sharp(file).jpeg().toBuffer();
-    console.log(1, res);
-    return res;
+  async convertHeicToJpeg(file: Buffer): Promise<Buffer> {
+    const outputBuffer = await convert({
+      buffer: file, // the HEIC file buffer
+      format: 'JPEG', // output format
+      quality: 1, // 0..1
+    });
+    return outputBuffer;
   }
 
   async saveFile(files: MFile[]): Promise<FileResponseEl[]> {
