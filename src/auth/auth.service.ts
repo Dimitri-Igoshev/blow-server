@@ -79,7 +79,9 @@ export class AuthService {
       { sub: res._id, email: data.email },
       '7d',
     );
-    await this.userService.update(res._id.toString(), { confirmToken });
+
+    if (isExist?.status !== UserStatus.ARHIVE)
+      await this.userService.update(res._id.toString(), { confirmToken });
 
     const confirmLink = `${process.env.FE_URL}/auth/confirm?token=${confirmToken}`;
 
