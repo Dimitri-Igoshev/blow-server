@@ -75,79 +75,79 @@ export class UserService {
   }
 
   async findAll({
-  online,
-  sex,
-  city,
-  minage,
-  maxage,
-  withPhoto = '',
-  limit = 12,
-}) {
-  limit = parseInt(String(limit), 10);
-  const filter: any = { status: UserStatus.ACTIVE };
+    online,
+    sex,
+    city,
+    minage,
+    maxage,
+    withPhoto = '',
+    limit = 12,
+  }) {
+    limit = parseInt(String(limit), 10);
+    const filter: any = { status: UserStatus.ACTIVE };
 
-  if (online) {
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    filter.activity = { $gte: fiveMinutesAgo };
-  }
+    if (online) {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      filter.activity = { $gte: fiveMinutesAgo };
+    }
 
-  if (sex) filter.sex = sex;
-  if (city) filter.city = city;
-  if (minage || maxage) {
-    filter.age = {
-      $gte: parseInt(minage || '0', 10),
-      $lte: parseInt(maxage || '150', 10),
-    };
-  }
+    if (sex) filter.sex = sex;
+    if (city) filter.city = city;
+    if (minage || maxage) {
+      filter.age = {
+        $gte: parseInt(minage || '0', 10),
+        $lte: parseInt(maxage || '150', 10),
+      };
+    }
 
-  if (withPhoto) {
-    filter.photos = { $exists: true, $not: { $size: 0 } };
-  }
+    if (withPhoto) {
+      filter.photos = { $exists: true, $not: { $size: 0 } };
+    }
 
-  const now = new Date();
-  const topIdStr = String(TOP_ID);
+    const now = new Date();
+    const topIdStr = String(TOP_ID);
 
-  const users = await this.userModel
-    .aggregate([
-      { $match: filter },
-      {
-        $addFields: {
-          isTop: {
-            $gt: [
-              {
-                $size: {
-                  $filter: {
-                    input: { $ifNull: ['$services', []] },
-                    as: 's',
-                    cond: {
-                      $and: [
-                        { $eq: [{ $toString: '$$s._id' }, topIdStr] },
-                        { $gt: [{ $toDate: '$$s.expiredAt' }, now] },
-                      ],
+    const users = await this.userModel
+      .aggregate([
+        { $match: filter },
+        {
+          $addFields: {
+            isTop: {
+              $gt: [
+                {
+                  $size: {
+                    $filter: {
+                      input: { $ifNull: ['$services', []] },
+                      as: 's',
+                      cond: {
+                        $and: [
+                          { $eq: [{ $toString: '$$s._id' }, topIdStr] },
+                          { $gt: [{ $toDate: '$$s.expiredAt' }, now] },
+                        ],
+                      },
                     },
                   },
                 },
-              },
-              0,
-            ],
+                0,
+              ],
+            },
           },
         },
-      },
-      {
-        $sort: {
-          isTop: -1,
-          raisedAt: -1,
-          updatedAt: -1,
-          createdAt: -1,
+        {
+          $sort: {
+            isTop: -1,
+            raisedAt: -1,
+            updatedAt: -1,
+            createdAt: -1,
+          },
         },
-      },
-      { $limit: limit },
-      { $project: { password: 0 } },
-    ])
-    .exec();
+        { $limit: limit },
+        { $project: { password: 0 } },
+      ])
+      .exec();
 
-  return users;
-}
+    return users;
+  }
 
   async findOne(id: string) {
     return await this.userModel
@@ -158,8 +158,14 @@ export class UserService {
   }
 
   async update(id: string, data: UpdateUserDto, files?: Express.Multer.File[]) {
+    const body = { ...data };
+
+    if (data.password) {
+      body.password = await bcrypt.hash(data.password, this.saltOrRounds);
+    }
+
     const result = await this.userModel
-      .findOneAndUpdate({ _id: id }, { ...data }, { new: true })
+      .findOneAndUpdate({ _id: id }, { ...body }, { new: true })
       .exec();
 
     if (!result) {
