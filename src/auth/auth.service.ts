@@ -185,7 +185,8 @@ export class AuthService {
 
   async recoveryPassword(email: string) {
     const user = await this.userService.getUserByEmail(email);
-    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!user || user.status === UserStatus.ARHIVE)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     const resetToken = await this.createToken({ sub: user._id, email }, '1h');
     await this.userService.update(user._id.toString(), { resetToken });
