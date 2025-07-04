@@ -85,9 +85,9 @@ export class PaymentService {
       userId: data?.payerId,
       type: TransactionType.CREDIT,
       method: TransactionMethod.CARD,
-      sum: +data?.checkout?.order?.amount / 100,
-      description: `Пополнение баланса на ${+data?.checkout?.order?.amount / 100}`,
-      trackingId: data?.checkout?.order?.tracking_id,
+      sum: +data?.amount,
+      description: `Пополнение баланса на ${+data?.amount}`,
+      trackingId: data?.order_id,
     });
 
     const newTransaction = await transaction.save();
