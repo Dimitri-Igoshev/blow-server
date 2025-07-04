@@ -50,6 +50,11 @@ export class ChatController {
     return this.chatService.deleteChat(id);
   }
 
+  @Delete('chat/:id/full')
+  removeChatWithMessages(@Param('id') id: string) {
+    return this.chatService.deleteChatWithMessages(id);
+  }
+
   @Delete('user/:id')
   removeUserChats(@Param('id') id: string) {
     return this.chatService.deleteUserChats(id);
