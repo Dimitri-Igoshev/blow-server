@@ -79,16 +79,21 @@ export class ChatService {
     await this.messageModel.deleteMany({ chat: id }).exec();
     await this.chatModel.findByIdAndDelete(id).exec();
 
-    const services = user.services.map((s: any) => {
+    const services = user?.services?.map((s: any) => {
       if (s._id === '6831857219e3572edace86ba') {
-        return { ...s, quantity: s.quantity - 1 };
-      } else {
-        return s;
+        return { ...s, quantity: +s.quantity - 1 };
       }
+      return s;
     });
 
-    return this.userModel
-      .findOneAndUpdate({ _id: id }, { services }, { new: true })
+    return await this.userModel
+      .findOneAndUpdate(
+        { _id: id },
+        {
+          services: [...services],
+        },
+        { new: true },
+      )
       .exec();
   }
 
