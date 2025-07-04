@@ -88,7 +88,7 @@ export class ChatService {
 
     return await this.userModel
       .findOneAndUpdate(
-        { _id: id },
+        { _id: userId },
         {
           services: [...services],
         },
