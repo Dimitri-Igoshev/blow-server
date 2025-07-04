@@ -9,6 +9,7 @@ export class ChatService {
   constructor(
     @InjectModel('Message') private messageModel: Model<Message>,
     @InjectModel('Chat') private chatModel: Model<any>,
+    @InjectModel('User') private userModel: Model<any>,
     private readonly chatGateway: Gateway,
   ) {}
 
@@ -65,9 +66,30 @@ export class ChatService {
     return await this.chatModel.findByIdAndDelete(id).exec();
   }
 
-  async deleteChatWithMessages(id: string): Promise<any> {
+  async deleteChatWithMessages(id: string, userId: string): Promise<any> {
+    const user = await this.userModel.findOne({ _id: userId }).exec();
+    if (!user) throw new Error('User not found');
+
+    const removeQnt = user.services.find(
+      (s: any) => s._id === '6831857219e3572edace86ba',
+    )?.quantity;
+
+    if (removeQnt < 1) throw new Error('Not enough services');
+
     await this.messageModel.deleteMany({ chat: id }).exec();
-    return await this.chatModel.findByIdAndDelete(id).exec();
+    await this.chatModel.findByIdAndDelete(id).exec();
+
+    const services = user.services.map((s: any) => {
+      if (s._id === '6831857219e3572edace86ba') {
+        return { ...s, quantity: s.quantity - 1 };
+      } else {
+        return s;
+      }
+    });
+
+    return this.userModel
+      .findOneAndUpdate({ _id: id }, { services }, { new: true })
+      .exec();
   }
 
   async deleteUserChats(userId: string): Promise<any> {
