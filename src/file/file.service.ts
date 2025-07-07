@@ -15,7 +15,7 @@ export class FileService {
   constructor() {
     ffmpeg.setFfmpegPath(ffmpegPath); // Устанавливаем путь к ffmpeg
   }
-  
+
   // Метод для конвертации буфера в MP3
   async convertBufferToMp3(inputBuffer: Buffer): Promise<Buffer> {
     return new Promise((resolve, reject) => {
@@ -62,9 +62,16 @@ export class FileService {
     const outputBuffer = await convert({
       buffer: file, // the HEIC file buffer
       format: 'JPEG', // output format
-      quality: 0.75, // 0..1
+      quality: 1
     });
-    return outputBuffer;
+
+    const resizedBuffer = await sharp(outputBuffer)
+      .resize({ width: 1080 }) // автоматически подстроит высоту
+      .toFormat('jpeg', { quality: 80 }) // сжать, если нужно
+      .withMetadata() // сохраняем EXIF (например, ориентацию)
+      .toBuffer();
+
+    return resizedBuffer;
   }
 
   async saveFile(files: MFile[]): Promise<FileResponseEl[]> {
