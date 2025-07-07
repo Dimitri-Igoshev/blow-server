@@ -68,6 +68,7 @@ export class FileService {
     const resizedBuffer = await sharp(outputBuffer)
       .resize({ width: 1080 }) // автоматически подстроит высоту
       .toFormat('jpeg', { quality: 80 }) // сжать, если нужно
+      .rotate()
       .withMetadata() // сохраняем EXIF (например, ориентацию)
       .toBuffer();
 
