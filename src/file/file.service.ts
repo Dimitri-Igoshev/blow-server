@@ -87,27 +87,26 @@ export class FileService {
     return resizedBuffer;
   }
 
-async normalizeToPortrait(inputBuffer: Buffer): Promise<Buffer> {
-  const baseImage = sharp(inputBuffer).rotate(); // применяет EXIF
+  async forcePortraitImage(inputBuffer: Buffer): Promise<Buffer> {
+  // Загружаем изображение и применяем rotate (на всякий случай)
+  const image = sharp(inputBuffer).rotate();
 
-  const metadata = await baseImage.metadata();
+  const metadata = await image.metadata();
+
   const width = metadata.width || 0;
   const height = metadata.height || 0;
 
-  const isLandscape = width > height;
-  const smallerSide = Math.min(width, height);
+  // Если лежит — поворачиваем вручную
+  const needsRotation = width > height;
 
-  const rotatedImage = isLandscape
-    ? baseImage.rotate(90) // повернём вручную
-    : baseImage;
-
-  return await rotatedImage
-    .resize({ width: smallerSide, fit: 'inside' }) // масштаб по меньшей грани
-    .webp({ quality: 80 }) // или .png() / .webp()
+  const processed = image
+    .rotate(needsRotation ? 90 : 0) // если альбомное — поворачиваем
+    .resize({ width: 1080, fit: 'inside' }) // можно изменить размер
     .withMetadata({ orientation: undefined }) // удалить EXIF
-    .toBuffer();
-}
+    .jpeg({ quality: 80 });
 
+  return await processed.toBuffer();
+}
   async saveFile(files: MFile[]): Promise<FileResponseEl[]> {
     const dateFolder = format(new Date(), 'yyyy-MM-dd');
     const uploadFolder = `${path}/uploads/${dateFolder}`;
@@ -120,7 +119,7 @@ async normalizeToPortrait(inputBuffer: Buffer): Promise<Buffer> {
 
       let convertedFiles = [];
 
-      if (file?.buffer && file?.mimetype?.includes('heic')) {
+      // if (file?.buffer && file?.mimetype?.includes('heic')) {
 //         const jpegBuffer = await convert({
 //           buffer: file.buffer, // the HEIC file buffer
 //           format: 'JPEG', // output format
@@ -141,11 +140,11 @@ async normalizeToPortrait(inputBuffer: Buffer): Promise<Buffer> {
 //   .withMetadata({ orientation: undefined }) // удалим остаточный EXIF
 //   .toBuffer();
 
-        const buffer = await this.normalizeToPortrait(file.buffer);
-        // @ts-ignore
-        convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
-      } else if (file?.buffer && file?.mimetype?.includes('image')) {
-        const buffer = await this.convertToWebP(file.buffer);
+        // const buffer = await this.forcePortraitImage(file.buffer);
+        // // @ts-ignore
+        // convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
+      if (file?.buffer && file?.mimetype?.includes('image')) {
+        const buffer = await this.forcePortraitImage(file.buffer)
 
         // @ts-ignore
         convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
