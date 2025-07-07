@@ -86,6 +86,18 @@ export class FileService {
     return resizedBuffer;
   }
 
+  async forcePortraitOrientation(inputBuffer: Buffer): Promise<Buffer> {
+  const metadata = await sharp(inputBuffer).metadata();
+
+  const isLandscape = metadata.width && metadata.height && metadata.width > metadata.height;
+
+  return sharp(inputBuffer)
+    .rotate() // применит EXIF-ориентацию
+    .rotate(isLandscape ? 90 : 0) // если фото альбомное — повернём вручную
+    .withMetadata({ orientation: undefined }) // удалим ориентацию
+    .toBuffer();
+}
+
   async saveFile(files: MFile[]): Promise<FileResponseEl[]> {
     const dateFolder = format(new Date(), 'yyyy-MM-dd');
     const uploadFolder = `${path}/uploads/${dateFolder}`;
@@ -105,11 +117,7 @@ export class FileService {
           quality: 0.9,
         });
 
-        const rotatedAndResized = await sharp(jpegBuffer)
-  .rotate() // применяет ориентацию
-  .resize({ width: 1080 })
-  .jpeg({ quality: 100 })
-  .toBuffer();
+        const rotatedAndResized = await this.forcePortraitOrientation(jpegBuffer)
 
         const buffer = await this.convertToWebP(rotatedAndResized);
         // @ts-ignore
