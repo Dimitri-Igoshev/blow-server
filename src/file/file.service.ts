@@ -144,7 +144,7 @@ export class FileService {
         // // @ts-ignore
         // convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
       if (file?.buffer && file?.mimetype?.includes('image')) {
-        const buffer = await this.forcePortraitImage(file.buffer)
+        const buffer = await sharp(file.buffer).rotate().webp().toBuffer();
 
         // @ts-ignore
         convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
