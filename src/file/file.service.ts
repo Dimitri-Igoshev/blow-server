@@ -87,31 +87,24 @@ export class FileService {
     return resizedBuffer;
   }
 
-async forcePortraitFromIphone(inputBuffer: Buffer) {
-  const parser = exif.create(inputBuffer);
-  const exifData = parser.parse();
-  const orientation = exifData.tags.Orientation || 1;
+async normalizeToPortrait(inputBuffer: Buffer): Promise<Buffer> {
+  const baseImage = sharp(inputBuffer).rotate(); // применяет EXIF
 
-  const sharpImage = sharp(inputBuffer).rotate(); // Применит EXIF ориентацию
-
-  const metadata = await sharpImage.metadata();
+  const metadata = await baseImage.metadata();
   const width = metadata.width || 0;
   const height = metadata.height || 0;
 
   const isLandscape = width > height;
+  const smallerSide = Math.min(width, height);
 
-  // Если после rotate изображение альбомное — поворачиваем вручную
-  if (isLandscape) {
-    return sharpImage
-      .rotate(90) // принудительный поворот в портрет
-      .withMetadata({ orientation: undefined }) // удалим EXIF
-      .jpeg({ quality: 80 })
-      .toBuffer();
-  }
+  const rotatedImage = isLandscape
+    ? baseImage.rotate(90) // повернём вручную
+    : baseImage;
 
-  return sharpImage
-    .withMetadata({ orientation: undefined }) // даже если уже портрет — уберём ориентацию
-    .jpeg({ quality: 80 })
+  return await rotatedImage
+    .resize({ width: smallerSide, fit: 'inside' }) // масштаб по меньшей грани
+    .webp({ quality: 80 }) // или .png() / .webp()
+    .withMetadata({ orientation: undefined }) // удалить EXIF
     .toBuffer();
 }
 
@@ -148,14 +141,7 @@ async forcePortraitFromIphone(inputBuffer: Buffer) {
 //   .withMetadata({ orientation: undefined }) // удалим остаточный EXIF
 //   .toBuffer();
 
-const rotateBuffer = await sharp(file?.buffer)
-  .rotate() // применяет EXIF, если он есть
-  .resize({ width: 1080, fit: 'inside' })
-  .jpeg({ quality: 80 })
-  .withMetadata({ orientation: undefined }) // очистка EXIF
-  .toBuffer();
-
-        const buffer = await this.convertToWebP(rotateBuffer);
+        const buffer = await this.normalizeToPortrait(file.buffer);
         // @ts-ignore
         convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
       } else if (file?.buffer && file?.mimetype?.includes('image')) {
