@@ -72,8 +72,7 @@ export class FileService {
       );
 
     const resizedBuffer = await sharp(outputBuffer)
-      .resize({ width: 1080 }) // автоматически подстроит высоту
-      .rotate()
+      .resize({ width: 2160 }) // автоматически подстроит высоту
       .withMetadata() // сохраняем EXIF (например, ориентацию)
       .toBuffer();
 
@@ -98,7 +97,18 @@ export class FileService {
 
       let convertedFiles = [];
 
-      if (file?.buffer && file?.mimetype?.includes('image')) {
+      if (file?.buffer && file?.mimetype?.includes('heic')) {
+        const outputBuffer = await convert({
+          buffer: file.buffer, // the HEIC file buffer
+          format: 'JPEG', // output format
+          quality: 0.7,
+        });
+
+        const buffer = await this.convertToWebP(outputBuffer);
+        
+        // @ts-ignore
+        convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
+      } else if (file?.buffer && file?.mimetype?.includes('image')) {
         const buffer = await this.convertToWebP(file.buffer);
 
         // @ts-ignore
