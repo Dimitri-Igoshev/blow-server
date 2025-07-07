@@ -105,7 +105,6 @@ export class FileService {
         });
 
         const buffer = await this.convertToWebP(outputBuffer);
-        
         // @ts-ignore
         convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
       } else if (file?.buffer && file?.mimetype?.includes('image')) {
