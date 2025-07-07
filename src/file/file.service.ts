@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { FileResponseEl } from './dto/file-response-el';
 import { format } from 'date-fns';
 import { path } from 'app-root-path';
@@ -62,15 +62,26 @@ export class FileService {
     const outputBuffer = await convert({
       buffer: file, // the HEIC file buffer
       format: 'JPEG', // output format
-      quality: 1
+      quality: 0.7,
     });
+
+    if (!outputBuffer)
+      throw new HttpException(
+        'Ошибка конвертации файла',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
 
     const resizedBuffer = await sharp(outputBuffer)
       .resize({ width: 1080 }) // автоматически подстроит высоту
-      .toFormat('jpeg', { quality: 80 }) // сжать, если нужно
       .rotate()
       .withMetadata() // сохраняем EXIF (например, ориентацию)
       .toBuffer();
+
+    if (!resizedBuffer)
+      throw new HttpException(
+        'Ошибка изменения размера файла',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
 
     return resizedBuffer;
   }
