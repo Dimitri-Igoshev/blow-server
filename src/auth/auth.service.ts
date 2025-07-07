@@ -24,6 +24,8 @@ export class AuthService {
   async login({ email, password }: LoginDto) {
     const user = await this.userService.getUserByEmail(email);
 
+    console.log(0, password);
+
     if (!user || user.status === UserStatus.ARHIVE)
       throw new HttpException(
         'User with this email not exists',
@@ -40,6 +42,8 @@ export class AuthService {
       throw new HttpException('Your account is inactive', HttpStatus.FORBIDDEN);
 
     const isMatch = await bcrypt.compare(password, user.password);
+
+    console.log('login', isMatch, password, user.password);
 
     if (!isMatch)
       throw new HttpException('Invalid password', HttpStatus.UNAUTHORIZED);
@@ -274,12 +278,8 @@ export class AuthService {
     const user = await this.userService.getUserByResetToken(token);
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
-    // сделать проверку не просрочен ли токен
-
-    const newPassword = await bcrypt.hash(password, this.saltOrRounds);
-
     return await !!this.userService.update(user._id.toString(), {
-      password: newPassword,
+      password,
       resetToken: '',
     });
   }

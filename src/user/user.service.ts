@@ -39,12 +39,16 @@ export class UserService {
     if (isExist)
       throw new HttpException('User is already exists', HttpStatus.CONFLICT);
 
+    const newPassword = data.password
+      ? await bcrypt.hash(data.password, this.saltOrRounds)
+      : await bcrypt.hash(PASSWORD, this.saltOrRounds);
+
     const newUser = new this.userModel({
       ...data,
-      password: data.password
-        ? await bcrypt.hash(data.password, this.saltOrRounds)
-        : await bcrypt.hash(PASSWORD, this.saltOrRounds),
+      password: newPassword,
     });
+
+    console.log('create', data.password, newPassword);
 
     const savedUser = await newUser.save();
 
