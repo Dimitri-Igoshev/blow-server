@@ -9,6 +9,7 @@ import * as ffmpeg from 'fluent-ffmpeg';
 import * as ffmpegPath from 'ffmpeg-static';
 import * as stream from 'stream';
 import * as convert from 'heic-convert';
+import exif from 'exif-parser';
 
 @Injectable()
 export class FileService {
@@ -86,15 +87,31 @@ export class FileService {
     return resizedBuffer;
   }
 
-  async forcePortraitOrientation(inputBuffer: Buffer): Promise<Buffer> {
-  const metadata = await sharp(inputBuffer).metadata();
+async forcePortraitFromIphone(inputBuffer: Buffer) {
+  const parser = exif.create(inputBuffer);
+  const exifData = parser.parse();
+  const orientation = exifData.tags.Orientation || 1;
 
-  const isLandscape = metadata.width && metadata.height && metadata.width > metadata.height;
+  const sharpImage = sharp(inputBuffer).rotate(); // Применит EXIF ориентацию
 
-  return sharp(inputBuffer)
-    .rotate() // применит EXIF-ориентацию
-    .rotate(isLandscape ? 90 : 0) // если фото альбомное — повернём вручную
-    .withMetadata({ orientation: undefined }) // удалим ориентацию
+  const metadata = await sharpImage.metadata();
+  const width = metadata.width || 0;
+  const height = metadata.height || 0;
+
+  const isLandscape = width > height;
+
+  // Если после rotate изображение альбомное — поворачиваем вручную
+  if (isLandscape) {
+    return sharpImage
+      .rotate(90) // принудительный поворот в портрет
+      .withMetadata({ orientation: undefined }) // удалим EXIF
+      .jpeg({ quality: 80 })
+      .toBuffer();
+  }
+
+  return sharpImage
+    .withMetadata({ orientation: undefined }) // даже если уже портрет — уберём ориентацию
+    .jpeg({ quality: 80 })
     .toBuffer();
 }
 
@@ -114,10 +131,10 @@ export class FileService {
         const jpegBuffer = await convert({
           buffer: file.buffer, // the HEIC file buffer
           format: 'JPEG', // output format
-          quality: 0.9,
+          quality: 1,
         });
 
-        const rotatedAndResized = await this.forcePortraitOrientation(jpegBuffer)
+        const rotatedAndResized = await this.forcePortraitFromIphone(jpegBuffer)
 
         const buffer = await this.convertToWebP(rotatedAndResized);
         // @ts-ignore
