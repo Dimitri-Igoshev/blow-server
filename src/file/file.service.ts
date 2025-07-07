@@ -73,6 +73,7 @@ export class FileService {
 
     const resizedBuffer = await sharp(outputBuffer)
       .resize({ width: 2160 }) // автоматически подстроит высоту
+      .rotate()
       .withMetadata() // сохраняем EXIF (например, ориентацию)
       .toBuffer();
 
@@ -104,7 +105,12 @@ export class FileService {
           quality: 0.7,
         });
 
-        const buffer = await this.convertToWebP(outputBuffer);
+        const resizedBuffer = await sharp(outputBuffer)
+          .rotate()
+          .withMetadata() // сохраняем EXIF (например, ориентацию)
+          .toBuffer();
+
+        const buffer = await this.convertToWebP(resizedBuffer);
         // @ts-ignore
         convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
       } else if (file?.buffer && file?.mimetype?.includes('image')) {
