@@ -99,18 +99,19 @@ export class FileService {
       let convertedFiles = [];
 
       if (file?.buffer && file?.mimetype?.includes('heic')) {
-        const outputBuffer = await convert({
+        const jpegBuffer = await convert({
           buffer: file.buffer, // the HEIC file buffer
           format: 'JPEG', // output format
-          quality: 0.7,
+          quality: 0.9,
         });
 
-        const resizedBuffer = await sharp(outputBuffer)
-          .rotate()
-          .withMetadata() // сохраняем EXIF (например, ориентацию)
-          .toBuffer();
+        const rotatedAndResized = await sharp(jpegBuffer)
+  .rotate() // применяет ориентацию
+  .resize({ width: 1080 })
+  .jpeg({ quality: 100 })
+  .toBuffer();
 
-        const buffer = await this.convertToWebP(resizedBuffer);
+        const buffer = await this.convertToWebP(rotatedAndResized);
         // @ts-ignore
         convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
       } else if (file?.buffer && file?.mimetype?.includes('image')) {
