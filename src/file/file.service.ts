@@ -107,7 +107,6 @@ export class FileService {
 
         const rotatedAndResized = await sharp(jpegBuffer)
   .rotate() // применяет ориентацию
-  .rotate(90) 
   .resize({ width: 1080 })
   .jpeg({ quality: 100 })
   .toBuffer();
