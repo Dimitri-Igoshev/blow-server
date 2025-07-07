@@ -140,7 +140,7 @@ const meta = await jpegImage.metadata();
 
 const isLandscape = meta.width && meta.height && meta.width > meta.height;
 
-const RotateBuffer = await jpegImage
+const buffer = await jpegImage
   .rotate(0) // безопасный noop
   .resize({ width: 1080, fit: 'inside' })
   .rotate(isLandscape ? 90 : 0) // поворачиваем если альбомная
@@ -148,7 +148,7 @@ const RotateBuffer = await jpegImage
   .withMetadata({ orientation: undefined }) // удалим остаточный EXIF
   .toBuffer();
 
-        const buffer = await this.convertToWebP(RotateBuffer);
+        // const buffer = await this.convertToWebP(RotateBuffer);
         // @ts-ignore
         convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
       } else if (file?.buffer && file?.mimetype?.includes('image')) {
