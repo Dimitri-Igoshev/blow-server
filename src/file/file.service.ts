@@ -128,27 +128,34 @@ async forcePortraitFromIphone(inputBuffer: Buffer) {
       let convertedFiles = [];
 
       if (file?.buffer && file?.mimetype?.includes('heic')) {
-        const jpegBuffer = await convert({
-          buffer: file.buffer, // the HEIC file buffer
-          format: 'JPEG', // output format
-          quality: 1,
-        });
+//         const jpegBuffer = await convert({
+//           buffer: file.buffer, // the HEIC file buffer
+//           format: 'JPEG', // output format
+//           quality: 1,
+//         });
 
-        const jpegImage = sharp(jpegBuffer);
+//         const jpegImage = sharp(jpegBuffer);
 
-const meta = await jpegImage.metadata();
+// const meta = await jpegImage.metadata();
 
-const isLandscape = meta.width && meta.height && meta.width > meta.height;
+// const isLandscape = meta.width && meta.height && meta.width > meta.height;
 
-const buffer = await jpegImage
-  .rotate(0) // безопасный noop
+// const Rotatebuffer = await jpegImage
+//   .rotate(0) // безопасный noop
+//   .resize({ width: 1080, fit: 'inside' })
+//   .rotate(isLandscape ? 90 : 0) // поворачиваем если альбомная
+//   .jpeg({ quality: 80 })
+//   .withMetadata({ orientation: undefined }) // удалим остаточный EXIF
+//   .toBuffer();
+
+const rotateBuffer = await sharp(file?.buffer)
+  .rotate() // применяет EXIF, если он есть
   .resize({ width: 1080, fit: 'inside' })
-  .rotate(isLandscape ? 90 : 0) // поворачиваем если альбомная
   .jpeg({ quality: 80 })
-  .withMetadata({ orientation: undefined }) // удалим остаточный EXIF
+  .withMetadata({ orientation: undefined }) // очистка EXIF
   .toBuffer();
 
-        // const buffer = await this.convertToWebP(RotateBuffer);
+        const buffer = await this.convertToWebP(rotateBuffer);
         // @ts-ignore
         convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
       } else if (file?.buffer && file?.mimetype?.includes('image')) {
