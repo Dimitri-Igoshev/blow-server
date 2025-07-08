@@ -143,7 +143,7 @@ export class FileService {
         // const buffer = await this.forcePortraitImage(file.buffer);
         // // @ts-ignore
         // convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
-      if (file?.buffer && file?.mimetype?.includes('image')) {
+      if (file?.buffer && (file?.mimetype?.includes('image') || file?.mimetype?.includes('heic'))) {
         const buffer = await sharp(file.buffer).rotate().webp().toBuffer();
 
         // @ts-ignore
