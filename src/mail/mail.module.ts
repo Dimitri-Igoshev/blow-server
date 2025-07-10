@@ -11,7 +11,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
         secure: false, // upgrade later with STARTTLS
         auth: {
           user: 'd.o.igoshev@gmail.com',
-          pass: 'mohzy9-nitcir-mictUg',
+          pass: '',
         },
       },
       defaults: {

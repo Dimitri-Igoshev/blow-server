@@ -39,7 +39,7 @@ import { ClaimModule } from './claim/claim.module';
         },
       },
       defaults: {
-        from: '"No Reply" <no-reply@localhost>',
+        from: '"No Reply" <no-reply@blow.ru>',
       },
       preview: false,
       template: {
