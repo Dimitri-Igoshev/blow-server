@@ -24,8 +24,6 @@ export class AuthService {
   async login({ email, password }: LoginDto) {
     const user = await this.userService.getUserByEmail(email);
 
-    console.log(0, password);
-
     if (!user || user.status === UserStatus.ARHIVE)
       throw new HttpException(
         'User with this email not exists',
