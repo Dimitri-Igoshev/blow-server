@@ -83,9 +83,10 @@ export class UserService {
     maxage,
     withPhoto = '',
     limit = 12,
+    admin = '',
   }) {
     limit = parseInt(String(limit), 10);
-    const filter: any = { status: UserStatus.ACTIVE };
+    const filter: any = admin ? {} : { status: UserStatus.ACTIVE };
 
     if (online) {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);

@@ -48,6 +48,7 @@ export class UserController {
     @Query('maxage') maxage: string,
     @Query('withPhoto') withPhoto: string,
     @Query('limit') limit: number,
+    @Query('admin') admin: string,
   ) {
     return this.userService.findAll({
       online,
@@ -57,6 +58,7 @@ export class UserController {
       maxage,
       withPhoto,
       limit,
+      admin,
     });
   }
 
