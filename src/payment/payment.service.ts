@@ -54,7 +54,7 @@ export class PaymentService {
     if (data?.status === 'EXECUTED') {
       return await this.userService.addBalance({
         id: user?._id?.toString() || '',
-        sum: +data?.amount,
+        sum: +transaction?.amount,
       });
     } else if (data?.status !== 'EXECUTED') {
       await this.transactionModel
