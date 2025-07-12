@@ -51,12 +51,12 @@ export class PaymentService {
 
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
-    if (data?.status === 'EXECUTED') {
+    if (data?.status === 'CONFIRMED') {
       return await this.userService.addBalance({
         id: user?._id?.toString() || '',
         sum: +transaction?.sum,
       });
-    } else if (data?.status !== 'EXECUTED') {
+    } else if (data?.status !== 'CONFIRMED') {
       await this.transactionModel
         .findOneAndUpdate(
           { trackingId: data?.order_id },
@@ -71,6 +71,8 @@ export class PaymentService {
         sum: 0,
       });
     }
+
+    return 'OK';
   }
 
   async createTransaction(data: any) {
