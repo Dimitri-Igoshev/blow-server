@@ -45,6 +45,12 @@ export class PaymentService {
     if (!transaction)
       throw new HttpException('Transaction not found', HttpStatus.NOT_FOUND);
 
+    if (transaction?.status === TransactionStatus.PAID)
+      throw new HttpException(
+        'Transaction already paid',
+        HttpStatus.BAD_REQUEST,
+      );
+
     const user = await this.userService.findOne(
       transaction?.userId.toString() || '',
     );
@@ -52,9 +58,20 @@ export class PaymentService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     if (data?.status === 'CONFIRMED') {
-      return await this.userService.addBalance({
-        id: user?._id?.toString() || '',
-        sum: +transaction?.sum,
+      await this.transactionModel
+        .findOneAndUpdate(
+          { trackingId: data?.orderId },
+          {
+            status: TransactionStatus.PAID,
+          },
+          { new: true },
+        )
+        .exec();
+
+      return await this.userService.update(user?._id?.toString() || '', {
+        balance: user.balance
+          ? +user.balance + +transaction?.sum
+          : +transaction?.sum,
       });
     } else if (data?.status !== 'CONFIRMED') {
       await this.transactionModel
@@ -66,10 +83,6 @@ export class PaymentService {
           { new: true },
         )
         .exec();
-      this.userService.addBalance({
-        id: user?._id?.toString() || '',
-        sum: 0,
-      });
     }
   }
 

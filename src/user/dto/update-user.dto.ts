@@ -28,4 +28,5 @@ export class UpdateUserDto {
   updatedAt?: any;
   activity?: any;
   raisedAt?: any;
+  balance?: any;
 }
