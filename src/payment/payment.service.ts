@@ -38,10 +38,8 @@ export class PaymentService {
   }
 
   async handleNotification(data: any): Promise<any> {
-    console.log('входные данные', data)
-
     const transaction = await this.transactionModel
-      .findOne({ trackingId: data?.paymentId })
+      .findOne({ trackingId: data?.orderId })
       .exec();
 
     if (!transaction)
@@ -61,7 +59,7 @@ export class PaymentService {
     } else if (data?.status !== 'CONFIRMED') {
       await this.transactionModel
         .findOneAndUpdate(
-          { trackingId: data?.order_id },
+          { trackingId: data?.orderId },
           {
             status: TransactionStatus.FAILED,
           },
