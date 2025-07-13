@@ -49,6 +49,8 @@ export class UserController {
     @Query('withPhoto') withPhoto: string,
     @Query('limit') limit: number,
     @Query('admin') admin: string,
+    @Query('active') active: string,
+    @Query('search') search: string,
   ) {
     return this.userService.findAll({
       online,
@@ -59,6 +61,8 @@ export class UserController {
       withPhoto,
       limit,
       admin,
+      active,
+      search,
     });
   }
 

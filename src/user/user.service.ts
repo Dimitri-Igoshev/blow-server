@@ -84,6 +84,8 @@ export class UserService {
     withPhoto = '',
     limit = 12,
     admin = '',
+    active = '',
+    search = '',
   }) {
     limit = parseInt(String(limit), 10);
     const filter: any = admin
@@ -95,6 +97,8 @@ export class UserService {
       filter.activity = { $gte: fiveMinutesAgo };
     }
 
+    if (search) filter.firstName = { $regex: search, $options: 'i' };
+    if (active) filter.status = UserStatus.ACTIVE;
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
     if (minage || maxage) {
@@ -549,7 +553,8 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
+    const canActivate =
+      user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
