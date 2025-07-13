@@ -86,7 +86,9 @@ export class UserService {
     admin = '',
   }) {
     limit = parseInt(String(limit), 10);
-    const filter: any = admin ? {} : { status: UserStatus.ACTIVE };
+    const filter: any = admin
+      ? { role: { $ne: UserRole.ADMIN } }
+      : { status: UserStatus.ACTIVE };
 
     if (online) {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -547,7 +549,8 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
+    const canActivate =
+      user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 

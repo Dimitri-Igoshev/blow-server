@@ -39,7 +39,7 @@ export class PaymentService {
 
   async handleNotification(data: any): Promise<any> {
     console.log('входные данные', data)
-    
+
     const transaction = await this.transactionModel
       .findOne({ trackingId: data?.paymentId })
       .exec();
@@ -73,8 +73,6 @@ export class PaymentService {
         sum: 0,
       });
     }
-
-    return 'OK';
   }
 
   async createTransaction(data: any) {
