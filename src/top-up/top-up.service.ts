@@ -29,6 +29,10 @@ export class TopUpService {
   }
 
   async verifyTopUpToken(data: { token: string }) {
+    const isExist = await this.topUpModel.exists({ token: data.token });
+
+    if (!isExist) throw new UnauthorizedException('Invalid or expired token');
+
     try {
       const decoded = await this.jwtService.verifyAsync(data.token, {
         secret: SECRET,
