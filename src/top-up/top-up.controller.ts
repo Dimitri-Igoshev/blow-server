@@ -6,13 +6,13 @@ export class TopUpController {
   constructor(private readonly topUpService: TopUpService) {}
 
   @Post()
-  create(@Body() amount: number) {
-    return this.topUpService.generateTopUpToken(amount);
+  create(@Body() data: { amount: number }) {
+    return this.topUpService.generateTopUpToken(data);
   }
 
   @Post('verify')
-  verify(@Body() token: string) {
-    return this.topUpService.verifyTopUpToken(token)
+  verify(@Body() data: { token: string }) {
+    return this.topUpService.verifyTopUpToken(data);
   }
 
   @Delete(':id')

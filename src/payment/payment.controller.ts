@@ -10,9 +10,16 @@ export class PaymentController {
     return this.paymentService.createChekout(data);
   }
 
-  @Post('/notification')
+  @Post('notification')
   paymentNotification(@Body() data: any) {
     return this.paymentService.handleNotification(data);
+  }
+
+  @Post('top-up')
+  topUpAccount(
+    @Body() data: { token: string; amount: number; userId: string },
+  ) {
+    return this.paymentService.topUpAccount(data);
   }
 
   // @Get()

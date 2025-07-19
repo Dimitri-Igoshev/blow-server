@@ -1,7 +1,9 @@
-import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { TopUp } from 'src/top-up/entities/top-up.entity';
+import { SECRET } from 'src/top-up/top-up.service';
 import {
   Transaction,
   TransactionMethod,
@@ -16,8 +18,9 @@ export class PaymentService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Transaction.name) private transactionModel: Model<Transaction>,
-    private readonly httpService: HttpService,
+    @InjectModel(TopUp.name) private topUpModel: Model<TopUp>,
     private readonly userService: UserService,
+    private jwtService: JwtService,
   ) {}
 
   async createChekout(data: any): Promise<any> {
@@ -111,6 +114,50 @@ export class PaymentService {
         { new: true },
       )
       .exec();
+  }
+
+  async topUpAccount(data: { token: string; amount: number; userId: string }) {
+    const decoded = await this.jwtService.verifyAsync(data.token, {
+      secret: SECRET,
+    });
+
+    if (!decoded)
+      throw new HttpException('Token not valid', HttpStatus.BAD_REQUEST);
+
+    const user = await this.userService.findOne(data?.userId || '');
+
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    const transaction = new this.transactionModel({
+      createdAt: new Date(Date.now()),
+      updatedAt: new Date(Date.now()),
+      userId: data?.userId,
+      type: TransactionType.CREDIT,
+      method: TransactionMethod.TOPUP,
+      sum: +data?.amount,
+      status: TransactionStatus.PAID,
+      description: `Пополнение баланса на ${+data?.amount}`,
+    });
+
+    const newTransaction = await transaction.save();
+
+    const newUser = await this.userModel
+      .findOneAndUpdate(
+        { _id: data.userId },
+        {
+          transactions: [newTransaction, ...user.transactions],
+          balance: user.balance
+            ? Number(user.balance) + Number(data.amount)
+            : Number(data.amount),
+        },
+        { new: true },
+      )
+      .exec();
+
+    if (!newUser)
+      throw new HttpException('User was not updated', HttpStatus.NOT_FOUND);
+
+    return await this.topUpModel.deleteOne({ token: data.token }).exec();
   }
 
   // paymentResponse(response: any) {}

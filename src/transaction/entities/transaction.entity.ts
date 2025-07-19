@@ -19,6 +19,7 @@ export enum TransactionStatus {
 export enum TransactionMethod {
   TEST = 'test',
 
+  TOPUP = 'topup',
   PAYPAL = 'paypal',
   CARD = 'card',
   BANK_TRANSFER = 'bank-transfer',
