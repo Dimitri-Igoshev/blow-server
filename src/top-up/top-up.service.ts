@@ -13,6 +13,21 @@ export class TopUpService {
     private jwtService: JwtService,
   ) {}
 
+  getTopups(query: Record<string, string>) {
+    const { search, limit } = query;
+
+    const filter: Record<string, any> = {};
+    if (search) filter.token = { $regex: search, $options: 'i' };
+
+    const limitValue = Number.parseInt(limit ?? '', 10);
+
+    return this.topUpModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(Number.isNaN(limitValue) ? 10 : limitValue)
+      .exec();
+  }
+
   async generateTopUpToken(payload: { amount: number }) {
     const token = await this.jwtService.signAsync(payload, {
       expiresIn: '10y',

@@ -21,7 +21,6 @@ export class TransactionService {
         { status: { $exists: false } },
       ];
     }
-    if (type) {}
 
     const limitValue = Number.parseInt(limit ?? '', 10);
 

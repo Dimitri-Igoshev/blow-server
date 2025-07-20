@@ -5,6 +5,11 @@ import { TopUpService } from './top-up.service';
 export class TopUpController {
   constructor(private readonly topUpService: TopUpService) {}
 
+  @Get()
+  get(@Query() query: Record<string, string>) {
+    return this.topUpService.getTopups(query);
+  }
+
   @Post()
   create(@Body() data: { amount: number }) {
     return this.topUpService.generateTopUpToken(data);
