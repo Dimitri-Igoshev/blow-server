@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Transaction } from './entities/transaction.entity';
+import { Transaction, TransactionStatus } from './entities/transaction.entity';
 import type { Model } from 'mongoose';
 
 @Injectable()
@@ -12,9 +12,16 @@ export class TransactionService {
   getTransactions(query: Record<string, string>) {
     const { status, type, method, limit } = query;
 
-    const filter = Object.fromEntries(
-      Object.entries({ status, type, method }).filter(([, value]) => value),
-    );
+    const filter: Record<string, any> = {};
+    if (status && status === TransactionStatus.PAID) {
+      filter.status = status;
+    } else if (status && status !== TransactionStatus.PAID) {
+      filter.$or = [
+        { status: { $ne: TransactionStatus.PAID } },
+        { status: { $exists: false } },
+      ];
+    }
+    if (type) {}
 
     const limitValue = Number.parseInt(limit ?? '', 10);
 
