@@ -31,7 +31,7 @@ export class ChatController {
     return this.chatService.getMessagesByChatId(id);
   }
 
-  @Get('all/messages')
+  @Get('get/all-messages')
   getAllMessages(@Query() query: Record<string, string>) {
     return this.chatService.getAllMessages(query);
   }
