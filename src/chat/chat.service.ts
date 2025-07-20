@@ -183,6 +183,10 @@ export class ChatService {
     return this.messageModel
       .find(filter)
       .sort({ createdAt: -1 })
+      .populate([
+        { path: 'sender', model: 'User' },
+        { path: 'recipient', model: 'User' },
+      ])
       .limit(Number.isNaN(limitValue) ? 10 : limitValue)
       .exec();
   }
