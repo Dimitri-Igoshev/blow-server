@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -28,6 +29,11 @@ export class ChatController {
   @Get(':id/messages')
   findByChatId(@Param('id') id: string) {
     return this.chatService.getMessagesByChatId(id);
+  }
+
+  @Get('all/messages')
+  getAllMessages(@Query() query: Record<string, string>) {
+    return this.chatService.getAllMessages(query);
   }
 
   @Get(':id')

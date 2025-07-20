@@ -134,7 +134,7 @@ export class ChatService {
     const sender = await this.userModel
       .findOne({ _id: data.sender })
       .select('-password')
-      .exec()
+      .exec();
     const recipient = await this.userModel
       .findOne({ _id: data.recipient })
       .select('-password')
@@ -163,6 +163,27 @@ export class ChatService {
         { path: 'recipient', model: 'User' },
         { path: 'messages', model: 'Message' },
       ])
+      .exec();
+  }
+
+  getAllMessages(query: Record<string, string>) {
+    const { search, limit } = query;
+
+    const filter: Record<string, any> = {};
+    if (search) {
+      filter.$or = [
+        { 'sender.firstName': { $regex: search, $options: 'i' } },
+        { 'recipient.firstName': { $regex: search, $options: 'i' } },
+        { text: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const limitValue = Number.parseInt(limit ?? '', 10);
+
+    return this.messageModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(Number.isNaN(limitValue) ? 10 : limitValue)
       .exec();
   }
 
