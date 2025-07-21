@@ -92,7 +92,9 @@ export class UserService {
 
     const filter: any = admin
       ? { role: { $ne: UserRole.ADMIN } }
-      : { status: UserStatus.ACTIVE };
+      : status !== UserStatus.ALL
+        ? { status: UserStatus.ACTIVE }
+        : {};
 
     if (online) {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -101,8 +103,7 @@ export class UserService {
 
     if (search) filter.firstName = { $regex: search, $options: 'i' };
     if (active) filter.status = UserStatus.ACTIVE;
-    if (status === UserStatus.ALL) filter.status = '';
-    if (status) filter.status = status;
+    if (status && status !== UserStatus.ALL) filter.status = status;
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
     if (minage || maxage) {
