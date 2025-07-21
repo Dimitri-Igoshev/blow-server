@@ -2,6 +2,8 @@ import {
   Controller,
   Post,
   Body,
+  Get,
+  Query,
 } from '@nestjs/common';
 import { ClaimService } from './claim.service';
 import { CreateClaimDto } from './dto/create-claim.dto';
@@ -15,10 +17,10 @@ export class ClaimController {
     return this.claimService.create(createClaimDto);
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.claimService.findAll();
-  // }
+  @Get()
+  findAll(@Query() query: Record<string, string>) {
+    return this.claimService.findAll(query);
+  }
 
   // @Get(':id')
   // findOne(@Param('id') id: string) {

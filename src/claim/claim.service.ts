@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CreateClaimDto } from './dto/create-claim.dto';
-import { UpdateClaimDto } from './dto/update-claim.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Claim } from './entities/claim.entity';
-import type { Model } from 'mongoose'
+import { Model } from 'mongoose';
 
 @Injectable()
 export class ClaimService {
@@ -12,6 +11,25 @@ export class ClaimService {
   async create(data: CreateClaimDto) {
     const newClaim = new this.claimModel(data);
     return await newClaim.save();
+  }
+
+  findAll(query: Record<string, string>) {
+    const { search, limit } = query;
+
+    const filter: Record<string, any> = {};
+    if (search) filter.text = { $regex: search, $options: 'i' };
+
+    const limitValue = Number.parseInt(limit ?? '', 10);
+
+    return this.claimModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .populate([
+        { path: 'from', model: 'User' },
+        { path: 'about', model: 'User' },
+      ])
+      .limit(Number.isNaN(limitValue) ? 10 : limitValue)
+      .exec();
   }
 
   // findAll() {

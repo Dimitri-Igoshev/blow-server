@@ -167,7 +167,7 @@ export class ChatService {
   }
 
   getAllMessages(query: Record<string, string>) {
-    const { search, limit } = query;
+    const { search, limit, userId } = query;
 
     const filter: Record<string, any> = {};
     if (search) {
@@ -177,6 +177,7 @@ export class ChatService {
         { text: { $regex: search, $options: 'i' } },
       ];
     }
+    if (userId) filter.$or = [{ sender: userId }, { recipient: userId }];
 
     const limitValue = Number.parseInt(limit ?? '', 10);
 
