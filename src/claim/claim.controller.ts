@@ -4,9 +4,12 @@ import {
   Body,
   Get,
   Query,
+  Patch,
+  Param,
 } from '@nestjs/common';
 import { ClaimService } from './claim.service';
 import { CreateClaimDto } from './dto/create-claim.dto';
+import type { UpdateClaimDto } from './dto/update-claim.dto'
 
 @Controller('claim')
 export class ClaimController {
@@ -27,10 +30,10 @@ export class ClaimController {
   //   return this.claimService.findOne(+id);
   // }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateClaimDto: UpdateClaimDto) {
-  //   return this.claimService.update(+id, updateClaimDto);
-  // }
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.claimService.update(id, data);
+  }
 
   // @Delete(':id')
   // remove(@Param('id') id: string) {

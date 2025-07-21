@@ -32,6 +32,10 @@ export class ClaimService {
       .exec();
   }
 
+  update(id: string, data: any) {
+    return this.claimModel.findByIdAndUpdate(id, data, { new: true });
+  }
+
   // findAll() {
   //   return `This action returns all claim`;
   // }
