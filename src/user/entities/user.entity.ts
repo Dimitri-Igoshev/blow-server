@@ -10,6 +10,7 @@ export enum UserStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   ARHIVE = 'archive',
+  ALL = 'all',
 }
 
 export enum UserRole {

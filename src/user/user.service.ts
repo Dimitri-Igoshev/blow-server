@@ -88,7 +88,6 @@ export class UserService {
       minage,
       maxage,
       withPhoto,
-      all,
     } = query;
 
     const filter: any = admin
@@ -102,7 +101,7 @@ export class UserService {
 
     if (search) filter.firstName = { $regex: search, $options: 'i' };
     if (active) filter.status = UserStatus.ACTIVE;
-    if (status === 'all') filter.status = '';
+    if (status === UserStatus.ALL) filter.status = '';
     if (status) filter.status = status;
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
