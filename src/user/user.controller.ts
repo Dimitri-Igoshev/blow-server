@@ -71,7 +71,7 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
-  @UseGuards(JwtGuard)
+  // @UseGuards(JwtGuard)
   @Patch(':id')
   @UseInterceptors(FilesInterceptor('files'))
   update(
