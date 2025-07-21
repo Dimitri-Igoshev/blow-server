@@ -40,30 +40,8 @@ export class UserController {
   }
 
   @Get()
-  findAll(
-    @Query('online') online: string,
-    @Query('sex') sex: string,
-    @Query('city') city: string,
-    @Query('minage') minage: string,
-    @Query('maxage') maxage: string,
-    @Query('withPhoto') withPhoto: string,
-    @Query('limit') limit: number,
-    @Query('admin') admin: string,
-    @Query('active') active: string,
-    @Query('search') search: string,
-  ) {
-    return this.userService.findAll({
-      online,
-      sex,
-      city,
-      minage,
-      maxage,
-      withPhoto,
-      limit,
-      admin,
-      active,
-      search,
-    });
+  findAll(@Query() query: Record<string, string>) {
+    return this.userService.findAll(query);
   }
 
   @Get(':id')

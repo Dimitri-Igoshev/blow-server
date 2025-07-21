@@ -75,19 +75,21 @@ export class UserService {
     }
   }
 
-  async findAll({
-    online,
-    sex,
-    city,
-    minage,
-    maxage,
-    withPhoto = '',
-    limit = 12,
-    admin = '',
-    active = '',
-    search = '',
-  }) {
-    limit = parseInt(String(limit), 10);
+  async findAll(query: Record<string, string>) {
+    const {
+      status,
+      limit,
+      admin,
+      online,
+      search,
+      active,
+      sex,
+      city,
+      minage,
+      maxage,
+      withPhoto,
+    } = query;
+
     const filter: any = admin
       ? { role: { $ne: UserRole.ADMIN } }
       : { status: UserStatus.ACTIVE };
@@ -99,6 +101,7 @@ export class UserService {
 
     if (search) filter.firstName = { $regex: search, $options: 'i' };
     if (active) filter.status = UserStatus.ACTIVE;
+    if (status) filter.status = status;
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
     if (minage || maxage) {
@@ -114,6 +117,8 @@ export class UserService {
 
     const now = new Date();
     const topIdStr = String(TOP_ID);
+
+    const limitValue = Number.parseInt(limit ?? '', 10);
 
     const users = await this.userModel
       .aggregate([
@@ -149,7 +154,7 @@ export class UserService {
             createdAt: -1,
           },
         },
-        { $limit: limit },
+        { $limit: Number.isNaN(limitValue) ? 10 : limitValue },
         { $project: { password: 0 } },
       ])
       .exec();
