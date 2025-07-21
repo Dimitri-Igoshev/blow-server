@@ -23,10 +23,9 @@ export class TransactionService {
         { type: TransactionType.DEBIT },
       ];
     } else if (status && status !== TransactionStatus.PAID) {
-      filter.$or = [
+      filter.$and = [
         { status: { $ne: TransactionStatus.PAID } },
         { type: { $ne: TransactionType.DEBIT } },
-        { status: { $exists: false } },
       ];
     }
 
