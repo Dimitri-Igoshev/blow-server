@@ -33,7 +33,7 @@ export class ClaimService {
   }
 
   update(id: string, data: any) {
-    return this.claimModel.findByIdAndUpdate(id, data, { new: true });
+    return this.claimModel.findOneAndUpdate({ _id: id }, { ...data }, { new: true });
   }
 
   // findAll() {
