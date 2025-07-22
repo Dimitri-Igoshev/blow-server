@@ -171,11 +171,7 @@ export class ChatService {
 
     const filter: Record<string, any> = {};
     if (search) {
-      filter.$or = [
-        { 'sender.firstName': { $regex: search, $options: 'i' } },
-        { 'recipient.firstName': { $regex: search, $options: 'i' } },
-        { text: { $regex: search, $options: 'i' } },
-      ];
+      filter.text = { $regex: search, $options: 'i' }
     }
     if (userId) filter.$or = [{ sender: userId }, { recipient: userId }];
 
