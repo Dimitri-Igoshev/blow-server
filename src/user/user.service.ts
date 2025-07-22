@@ -2,7 +2,12 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserRole, UserStatus } from './entities/user.entity';
+import {
+  User,
+  UserRole,
+  UserStatus,
+  type ISession,
+} from './entities/user.entity';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { MFile } from 'src/file/mfile.class';
@@ -219,11 +224,42 @@ export class UserService {
     return result;
   }
 
-  async activity(id: string, timestamp: any) {
+  async activity(
+    id: string,
+    timestamp: any,
+    req: any,
+    ip: any,
+    userAgent: any,
+  ) {
     if (!timestamp) return;
 
+    const user = await this.findOne(id);
+    let targetDate;
+    const now = new Date();
+    if (user?.activity) targetDate = new Date(user.activity);
+    const diffMs = now.getTime() - targetDate?.getTime(); // разница в миллисекундах
+    const diffMinutes = diffMs / (1000 * 60); // в минутах
+    let session;
+
+    if (diffMinutes > 30) {
+      const forwarded = req?.headers['x-forwarded-for'] as string;
+      const realIp = forwarded ? forwarded.split(',')[0] : ip;
+
+      session = {
+        ip: realIp,
+        userAgent,
+        timestamp: new Date(Date.now()),
+      };
+
+      user?.sessions.unshift(session);
+    }
+
     const result = await this.userModel
-      .findOneAndUpdate({ _id: id }, { activity: timestamp }, { new: true })
+      .findOneAndUpdate(
+        { _id: id },
+        { activity: timestamp, sessions: user?.sessions },
+        { new: true },
+      )
       .exec();
 
     if (!result) {

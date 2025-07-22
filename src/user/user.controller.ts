@@ -11,6 +11,9 @@ import {
   UseInterceptors,
   UploadedFile,
   UploadedFiles,
+  Ip,
+  Headers,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -62,8 +65,14 @@ export class UserController {
 
   // @UseGuards(JwtGuard)
   @Patch(':id/activity')
-  activity(@Param('id') id: string, @Body() data: { timestamp: any }) {
-    return this.userService.activity(id, data?.timestamp);
+  activity(
+    @Param('id') id: string,
+    @Body() data: { timestamp: any },
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
+    @Req() req: Request,
+  ) {
+    return this.userService.activity(id, data?.timestamp, req, ip, userAgent);
   }
 
   @Patch(':id/visit')

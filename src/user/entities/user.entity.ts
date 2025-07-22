@@ -39,6 +39,12 @@ export interface IService {
   expiredAt: Date;
 }
 
+export interface ISession {
+  timestamp: Date;
+  ip: string;
+  userAgent: any;
+}
+
 @Schema()
 export class User {
   @Prop({ required: true, unique: true })
@@ -148,6 +154,9 @@ export class User {
 
   @Prop()
   services: IService[];
+
+  @Prop()
+  sessions: ISession[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
