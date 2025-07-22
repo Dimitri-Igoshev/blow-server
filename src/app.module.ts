@@ -18,6 +18,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { ClaimModule } from './claim/claim.module';
 import { TopUpModule } from './top-up/top-up.module';
 import { CityModule } from './city/city.module';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { CityModule } from './city/city.module';
     ClaimModule,
     TopUpModule,
     CityModule,
+    SessionModule,
   ],
 })
 export class AppModule {}

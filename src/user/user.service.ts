@@ -21,6 +21,7 @@ import {
 import { ServicePeriod } from 'src/services/entities/service.entity';
 import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import { Session } from 'src/session/entities/session.entity';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -32,6 +33,7 @@ export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Transaction.name) private transactionModel: Model<Transaction>,
+    @InjectModel(Session.name) private sessionModel: Model<Session>,
     private readonly mailerService: MailerService,
     private readonly fileService: FileService,
   ) {}
@@ -235,32 +237,28 @@ export class UserService {
 
     const user = await this.findOne(id);
 
-    let targetDate;
-    const now = new Date();
-    if (user?.activity) targetDate = new Date(user.activity);
-    const diffMs = now.getTime() - targetDate?.getTime(); // разница в миллисекундах
-    const diffMinutes = diffMs / (1000 * 60); // в минутах
-    let session;
+    const forwarded = req?.headers['x-forwarded-for'] as string;
+    const realIp = forwarded ? forwarded.split(',')[0] : ip;
 
-    if (diffMinutes > 30) {
-      const forwarded = req?.headers['x-forwarded-for'] as string;
-      const realIp = forwarded ? forwarded.split(',')[0] : ip;
-
-      session = {
+    if (user) {
+      const newSession = new this.sessionModel({
+        owner: user._id,
         ip: realIp,
         userAgent,
-        timestamp: new Date(Date.now()),
-      };
-
-      user?.sessions ? user?.sessions.unshift(session) : [session];
+      });
+      await newSession.save();
     }
+    // let targetDate;
+    // const now = new Date();
+    // if (user?.activity) targetDate = new Date(user.activity);
+    // const diffMs = now.getTime() - targetDate?.getTime(); // разница в миллисекундах
+    // const diffMinutes = diffMs / (1000 * 60); // в минутах
+    // let session;
+
+    // if (diffMinutes > 30) {
 
     const result = await this.userModel
-      .findOneAndUpdate(
-        { _id: id },
-        { activity: timestamp, sessions: user?.sessions },
-        { new: true },
-      )
+      .findOneAndUpdate({ _id: id }, { activity: timestamp }, { new: true })
       .exec();
 
     if (!result) {
