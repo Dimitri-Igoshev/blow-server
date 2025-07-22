@@ -235,25 +235,25 @@ export class UserService {
 
     const user = await this.findOne(id);
 
-    // let targetDate;
-    // const now = new Date();
-    // if (user?.activity) targetDate = new Date(user.activity);
-    // const diffMs = now.getTime() - targetDate?.getTime(); // разница в миллисекундах
-    // const diffMinutes = diffMs / (1000 * 60); // в минутах
-    // let session;
+    let targetDate;
+    const now = new Date();
+    if (user?.activity) targetDate = new Date(user.activity);
+    const diffMs = now.getTime() - targetDate?.getTime(); // разница в миллисекундах
+    const diffMinutes = diffMs / (1000 * 60); // в минутах
+    let session;
 
-    // if (diffMinutes > 30) {
-    const forwarded = req?.headers['x-forwarded-for'] as string;
-    const realIp = forwarded ? forwarded.split(',')[0] : ip;
+    if (diffMinutes > 30) {
+      const forwarded = req?.headers['x-forwarded-for'] as string;
+      const realIp = forwarded ? forwarded.split(',')[0] : ip;
 
-    const session = {
-      ip: realIp,
-      userAgent,
-      timestamp: new Date(Date.now()),
-    };
+      session = {
+        ip: realIp,
+        userAgent,
+        timestamp: new Date(Date.now()),
+      };
 
-    user?.sessions ? user?.sessions.unshift(session) : [session];
-    // }
+      user?.sessions ? user?.sessions.unshift(session) : [session];
+    }
 
     const result = await this.userModel
       .findOneAndUpdate(
@@ -597,7 +597,8 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
+    const canActivate =
+      user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
