@@ -240,13 +240,27 @@ export class UserService {
     const forwarded = req?.headers['x-forwarded-for'] as string;
     const realIp = forwarded ? forwarded.split(',')[0] : ip;
 
+    const sessions = await this.sessionModel
+      .find({ owner: user?._id })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .exec();
+
     if (user) {
-      const newSession = new this.sessionModel({
-        owner: user._id,
-        ip: realIp,
-        userAgent,
-      });
-      await newSession.save();
+      const lastSession = sessions[0];
+      const THIRTY_MINUTES = 30 * 60 * 1000;
+
+      //@ts-ignore
+      const shouldCreateNew = !lastSession || Date.now() - lastSession.createdAt.getTime() > THIRTY_MINUTES;
+
+      if (shouldCreateNew) {
+        const newSession = new this.sessionModel({
+          owner: user._id,
+          ip: realIp,
+          userAgent,
+        });
+        await newSession.save();
+      }
     }
     // let targetDate;
     // const now = new Date();
