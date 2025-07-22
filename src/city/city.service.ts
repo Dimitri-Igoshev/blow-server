@@ -23,12 +23,20 @@ export class CityService {
 
     return this.cityModel
       .find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ order: 1, label: 1 })
       .limit(Number.isNaN(limitValue) ? 10 : limitValue)
       .exec();
   }
 
-  remove(id: number) {
+  update(id: string, data: any) {
+    return this.cityModel.findOneAndUpdate(
+      { _id: id },
+      { ...data },
+      { new: true },
+    );
+  }
+
+  remove(id: string) {
     return `This action removes a #${id} city`;
   }
 }

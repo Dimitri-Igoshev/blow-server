@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { CityService } from './city.service';
 import { CreateCityDto } from './dto/create-city.dto';
@@ -22,6 +23,11 @@ export class CityController {
   @Get()
   findAll(@Query() query: Record<string, string>) {
     return this.cityService.findAll(query);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.claimService.update(id, data);
   }
 
   @Delete(':id')
