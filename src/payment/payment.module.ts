@@ -11,6 +11,7 @@ import { User, UserSchema } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { FileService } from 'src/file/file.service';
 import { TopUp, TopUpSchema } from 'src/top-up/entities/top-up.entity'
+import { Session, SessionSchema } from 'src/session/entities/session.entity'
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TopUp, TopUpSchema } from 'src/top-up/entities/top-up.entity'
       { name: User.name, schema: UserSchema },
       { name: Transaction.name, schema: TransactionSchema },
       { name: TopUp.name, schema: TopUpSchema },
+      { name: Session.name, schema: SessionSchema },
     ]),
     HttpModule,
   ],
