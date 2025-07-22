@@ -27,7 +27,7 @@ export class CityController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() data: any) {
-    return this.claimService.update(id, data);
+    return this.cityService.update(id, data);
   }
 
   @Delete(':id')
