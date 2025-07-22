@@ -234,25 +234,26 @@ export class UserService {
     if (!timestamp) return;
 
     const user = await this.findOne(id);
-    let targetDate;
-    const now = new Date();
-    if (user?.activity) targetDate = new Date(user.activity);
-    const diffMs = now.getTime() - targetDate?.getTime(); // разница в миллисекундах
-    const diffMinutes = diffMs / (1000 * 60); // в минутах
-    let session;
 
-    if (diffMinutes > 30) {
-      const forwarded = req?.headers['x-forwarded-for'] as string;
-      const realIp = forwarded ? forwarded.split(',')[0] : ip;
+    // let targetDate;
+    // const now = new Date();
+    // if (user?.activity) targetDate = new Date(user.activity);
+    // const diffMs = now.getTime() - targetDate?.getTime(); // разница в миллисекундах
+    // const diffMinutes = diffMs / (1000 * 60); // в минутах
+    // let session;
 
-      session = {
-        ip: realIp,
-        userAgent,
-        timestamp: new Date(Date.now()),
-      };
+    // if (diffMinutes > 30) {
+    const forwarded = req?.headers['x-forwarded-for'] as string;
+    const realIp = forwarded ? forwarded.split(',')[0] : ip;
 
-      user?.sessions.unshift(session);
-    }
+    const session = {
+      ip: realIp,
+      userAgent,
+      timestamp: new Date(Date.now()),
+    };
+
+    user?.sessions ? user?.sessions.unshift(session) : [session];
+    // }
 
     const result = await this.userModel
       .findOneAndUpdate(
