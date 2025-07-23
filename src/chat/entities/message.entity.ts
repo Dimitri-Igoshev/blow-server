@@ -5,7 +5,7 @@ import { Chat } from './chat.entity';
 
 export type MessageDocument = HydratedDocument<Message>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Message {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,

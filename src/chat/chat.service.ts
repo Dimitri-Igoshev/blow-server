@@ -117,7 +117,6 @@ export class ChatService {
     const message = new this.messageModel({
       chat: chat._id,
       ...data,
-      updatedAt: new Date(Date.now()),
     });
 
     await this.chatModel
@@ -179,7 +178,7 @@ export class ChatService {
 
     return this.messageModel
       .find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, text: 1 })
       .populate([
         { path: 'sender', model: 'User' },
         { path: 'recipient', model: 'User' },
