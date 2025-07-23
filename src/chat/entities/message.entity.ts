@@ -41,18 +41,6 @@ export class Message {
   fileUrl: string;
 
   @Prop({
-    type: Date,
-    default: Date.now(),
-  })
-  createdAt: Date;
-
-  @Prop({
-    type: Date,
-    default: Date.now(),
-  })
-  updatedAt: Date;
-
-  @Prop({
     type: Boolean,
     default: false,
   })
