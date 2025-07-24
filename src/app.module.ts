@@ -6,7 +6,6 @@ import { MailModule } from './mail/mail.module';
 import { UserModule } from './user/user.module';
 import { FileModule } from './file/file.module';
 import { CommonModule } from './common/common.module';
-import { GatewayModule } from './gateway/gateway.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { ServicesModule } from './services/services.module';
 import { ChatModule } from './chat/chat.module';
@@ -58,7 +57,6 @@ import { SessionModule } from './session/session.module';
     UserModule,
     FileModule,
     CommonModule,
-    GatewayModule,
     TransactionModule,
     ServicesModule,
     ChatModule,
