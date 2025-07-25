@@ -18,6 +18,7 @@ import { ClaimModule } from './claim/claim.module';
 import { TopUpModule } from './top-up/top-up.module';
 import { CityModule } from './city/city.module';
 import { SessionModule } from './session/session.module';
+import { GuestModule } from './guest/guest.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { SessionModule } from './session/session.module';
     TopUpModule,
     CityModule,
     SessionModule,
+    GuestModule,
   ],
 })
 export class AppModule {}

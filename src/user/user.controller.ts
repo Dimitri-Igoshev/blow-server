@@ -136,4 +136,9 @@ export class UserController {
   useRaiseProfile(@Body() data: { id: string }) {
     return this.userService.useRaiseProfile(data.id);
   }
+
+  @Get('visits/to/gasts')
+  getVisitsToGasts() {
+    return this.userService.visitsToGasts();
+  }
 }

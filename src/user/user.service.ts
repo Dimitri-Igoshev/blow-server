@@ -22,6 +22,7 @@ import { ServicePeriod } from 'src/services/entities/service.entity';
 import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Session } from 'src/session/entities/session.entity';
+import { Guest } from 'src/guest/entities/guest.entity';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -34,6 +35,7 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Transaction.name) private transactionModel: Model<Transaction>,
     @InjectModel(Session.name) private sessionModel: Model<Session>,
+    @InjectModel(Guest.name) private guestModel: Model<Guest>,
     private readonly mailerService: MailerService,
     private readonly fileService: FileService,
   ) {}
@@ -282,32 +284,55 @@ export class UserService {
     return result;
   }
 
-  async visit(id: string, data: { timestamp: any; guest: string }) {
-    if (!data?.timestamp || !data?.guest) return;
+  async visitsToGasts() {
+    const users = await this.userModel.find().exec();
+    if (!users) throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
 
-    const user = await this.userModel.findById(id);
+    users.forEach((user) => {
+      user.visits.forEach((visit) => {
+        const newGuest = new this.guestModel({ user: user._id, guest: visit });
+        newGuest.save();
+        console.log(visit);
+      });
+      this.userModel
+        .findOneAndUpdate({ _id: user._id }, { visits: [] }, { new: true })
+        .exec();
+    });
 
-    if (!user) return;
+    return 'ok';
+  }
 
-    let visits = [...user.visits];
-
-    const record = visits.find((el: any) => el._id === data.guest);
-
-    if (record) {
-      visits = visits.filter((el: any) => el._id !== data.guest);
-    }
-
-    visits.unshift({ date: data.timestamp, _id: data.guest });
-
-    const result = await this.userModel
-      .findOneAndUpdate({ _id: id }, { visits: [...visits] }, { new: true })
+  async visit(id: string, data: { guest: string }) {
+    await this.guestModel
+      .findOneAndDelete({ user: id, guest: data.guest })
       .exec();
 
-    if (!result) {
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-    }
+    const newGuest = new this.guestModel({ user: id, guest: data.guest });
+    newGuest.save();
 
-    return result;
+    //   const user = await this.userModel.findById(id);
+
+    //   if (!user) return;
+
+    //   let visits = [...user.visits];
+
+    //   const record = visits.find((el: any) => el._id === data.guest);
+
+    //   if (record) {
+    //     visits = visits.filter((el: any) => el._id !== data.guest);
+    //   }
+
+    //   visits.unshift({ date: data.timestamp, _id: data.guest });
+
+    //   const result = await this.userModel
+    //     .findOneAndUpdate({ _id: id }, { visits: [...visits] }, { new: true })
+    //     .exec();
+
+    //   if (!result) {
+    //     throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    //   }
+
+    //   return result;
   }
 
   async createNote(id: string, data: { text: string; userId: string }) {
