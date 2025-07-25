@@ -34,11 +34,12 @@ import { SessionModule } from './session/session.module';
         host: 'smtp.timeweb.ru',
         port: 25,
         ignoreTLS: true,
-        secure: false,
+        secure: true,
         auth: {
           user: 'support@blow.ru',
           pass: 'g0ak9wyq47',
         },
+        connectionTimeout: 10000,
       },
       defaults: {
         from: '"No Reply" <no-reply@blow.ru>',
