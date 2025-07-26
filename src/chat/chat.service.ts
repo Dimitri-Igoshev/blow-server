@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Message } from './entities/message.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { format } from 'date-fns';
+import { UserStatus } from 'src/user/entities/user.entity'
 
 interface MessageNotificationParams {
   recipient: any;
@@ -129,9 +130,11 @@ export class ChatService {
       .select('-password')
       .exec();
     const recipient = await this.userModel
-      .findOne({ _id: data.recipient })
+      .findOne({ _id: data.recipient, status: UserStatus.ACTIVE })
       .select('-password')
       .exec();
+
+    if (!sender || !recipient) throw new Error('User not found');
 
     this.sendNewMessageNotification({
       recipient: {
