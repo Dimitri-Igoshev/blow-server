@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Message } from './entities/message.entity';
-import { Gateway } from 'src/gateway/gateway';
 import { MailerService } from '@nestjs-modules/mailer';
 import { format } from 'date-fns';
 
@@ -19,7 +18,6 @@ export class ChatService {
     @InjectModel('Message') private messageModel: Model<Message>,
     @InjectModel('Chat') private chatModel: Model<any>,
     @InjectModel('User') private userModel: Model<any>,
-    private readonly chatGateway: Gateway,
     private readonly mailerService: MailerService,
   ) {}
 
@@ -124,8 +122,6 @@ export class ChatService {
         { new: true },
       )
       .exec();
-
-    this.chatGateway.onNewMessage(null);
     const newMessage = message.save();
 
     const sender = await this.userModel

@@ -4,7 +4,6 @@ import { ChatController } from './chat.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Message, MessageSchema } from './entities/message.entity';
 import { Chat, ChatSchema } from './entities/chat.entity';
-import { Gateway } from 'src/gateway/gateway';
 import { User, UserSchema } from 'src/user/entities/user.entity'
 
 @Module({
@@ -16,6 +15,6 @@ import { User, UserSchema } from 'src/user/entities/user.entity'
     ]),
   ],
   controllers: [ChatController],
-  providers: [ChatService, Gateway],
+  providers: [ChatService],
 })
 export class ChatModule {}
