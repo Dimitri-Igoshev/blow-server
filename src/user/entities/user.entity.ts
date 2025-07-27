@@ -157,6 +157,9 @@ export class User {
 
   @Prop()
   sessions: ISession[];
+
+  @Prop()
+  lastMailing: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

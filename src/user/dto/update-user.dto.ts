@@ -29,4 +29,5 @@ export class UpdateUserDto {
   activity?: any;
   raisedAt?: any;
   balance?: any;
+  lastMailing?: string;
 }
