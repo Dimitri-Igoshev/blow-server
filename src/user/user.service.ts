@@ -175,7 +175,7 @@ export class UserService {
 
   async findOne(id: string) {
     return await this.userModel
-      .findOne({ _id: id, status: UserStatus.ACTIVE })
+      .findOne({ _id: id })
       .select('-password')
       .populate([{ path: 'transactions', model: 'Transaction' }])
       .exec();
