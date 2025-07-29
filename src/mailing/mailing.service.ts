@@ -20,8 +20,10 @@ export class MailingService {
   }
 
   async findAll() {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 часа назад
+
     return await this.mailingModel
-      .find()
+      .find({ createdAt: { $gte: oneDayAgo } }) // фильтр по createdAt
       .populate([
         { path: 'owner', model: 'User' },
         { path: 'interested', model: 'User' },
