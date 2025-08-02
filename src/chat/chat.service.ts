@@ -60,11 +60,8 @@ export class ChatService {
                 <h2 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 600;">Новое сообщение</h2>
                 <p style="margin: 0 0 16px 0;">Здравствуйте, ${recipient?.firstName}!</p>
                 <p style="margin: 0 0 16px 0;">
-                  Вы получили новое сообщение от <strong>${sender?.firstName}</strong> на платформе <strong>BLOW</strong>:
+                  Вы получили новое сообщение от <strong>${sender?.firstName}</strong> на платформе <strong>BLOW</strong>
                 </p>
-                <blockquote style="margin: 0 0 16px 0; padding: 12px; background-color: #f0f0f0; border-left: 4px solid #e31e24;">
-                  ${messageText}
-                </blockquote>
                 <p style="margin: 0 0 16px 0; font-size: 14px; color: #666;">Дата и время: ${formattedDate}</p>
 
                 <!-- CTA Button -->
