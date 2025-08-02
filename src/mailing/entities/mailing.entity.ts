@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { User } from 'src/user/entities/user.entity';
 
-@Schema()
+@Schema({ timestamps: true })
 export class Mailing {
   @Prop()
   text: string;
