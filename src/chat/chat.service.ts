@@ -70,7 +70,7 @@ export class ChatService {
                     <td align="center" bgcolor="#e31e24" style="border-radius: 100px;">
                       <a href="${chatLink}"
                          style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px;">
-                        Перейти к переписке
+                        Перейти на сайт
                       </a>
                     </td>
                   </tr>
@@ -142,7 +142,8 @@ export class ChatService {
         firstName: sender?.firstName || 'пользователя Blow',
       },
       messageText: data?.text || '',
-      chatLink: `https://blow.ru/account/dialogues/${chat._id || '1'}`,
+      // chatLink: `https://blow.ru/account/dialogues/${chat._id || '1'}`,
+      chatLink: `https://blow.ru`,
     });
 
     return newMessage;

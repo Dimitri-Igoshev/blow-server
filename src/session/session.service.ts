@@ -11,12 +11,43 @@ export class SessionService {
     @InjectModel(Session.name) private sessionModel: Model<Session>,
   ) {}
 
-  async create(data: any) {
-    const newSession = new this.sessionModel(data);
-    return await newSession.save();
+  // async create(data: any) {
+  //   const newSession = new this.sessionModel(data);
+  //   return await newSession.save();
+  // }
+
+  // findAll(query: Record<string, string>) {
+  //   const { limit, userId } = query;
+
+  //   const limitValue = Number.parseInt(limit ?? '', 10);
+
+  //   return this.sessionModel
+  //     .find({ owner: userId })
+  //     .sort({ createdAt: -1 })
+  //     .limit(Number.isNaN(limitValue) ? 10 : limitValue)
+  //     .exec();
+  // }
+
+  async create(userId: string, ip: string, userAgent: string) {
+    const session = new this.sessionModel({ userId, ip, userAgent });
+    return await session.save();
   }
 
-  findAll(query: Record<string, string>) {
+  async updateActivity(sessionId: string) {
+    await this.sessionModel
+      .findOneAndUpdate(
+        { _id: sessionId },
+        { lastActivityAt: new Date() },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async get(sessionId: string) {
+    return this.sessionModel.findOne({ _id: sessionId }).exec();
+  }
+
+  async getAll(query: Record<string, string>) {
     const { limit, userId } = query;
 
     const limitValue = Number.parseInt(limit ?? '', 10);

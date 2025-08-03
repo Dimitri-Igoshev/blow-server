@@ -23,6 +23,7 @@ import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Session } from 'src/session/entities/session.entity';
 import { Guest } from 'src/guest/entities/guest.entity';
+import { format } from 'date-fns';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -184,6 +185,8 @@ export class UserService {
   async update(id: string, data: UpdateUserDto, files?: Express.Multer.File[]) {
     const body = { ...data };
 
+    const isBlocking = data.status === UserStatus.INACTIVE;
+
     if (data.password) {
       body.password = await bcrypt.hash(data.password, this.saltOrRounds);
     }
@@ -194,6 +197,81 @@ export class UserService {
 
     if (!result) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    if (isBlocking) {
+      const formattedDate = format(new Date(Date.now()), "dd MM yyyy 'в' HH:mm");
+
+      this.mailerService.sendMail({
+        to: result?.email,
+        from: 'support@blow.ru',
+        subject: `Новое сообщение от администрации — BLOW`,
+        text: `Ваш аккаунт заблокирован`,
+        html: `
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Новое сообщение — BLOW</title>
+  </head>
+  <body style="margin:0; padding:0; background-color:#f9f9f9;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f9f9f9;">
+      <tr>
+        <td align="center" style="padding: 40px 0;">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="background-color:#ffffff; border-radius:8px; overflow:hidden; font-family: 'Montserrat', Arial, sans-serif;">
+            <!-- Header -->
+            <tr>
+              <td align="center" bgcolor="#e31e24" style="padding: 20px;">
+                <img src="https://blow.igoshev.de/blow-logo.png" alt="BLOW Logo" width="160" style="display: block;" />
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding: 30px 40px; color: #333333; font-size: 16px; line-height: 1.5;">
+                <h2 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 600;">Новое сообщение</h2>
+                <p style="margin: 0 0 16px 0;">Здравствуйте, ${result?.firstName}!</p>
+                <p style="margin: 0 0 16px 0;">
+                  Ваша анкета на платформе <strong>BLOW</strong> была заблокирована. Для уточнения причин обратитесь в службу поддержки.
+                </p>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #666;">Дата и время: ${formattedDate}</p>
+
+                <!-- CTA Button -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+                  <tr>
+                    <td align="center" bgcolor="#e31e24" style="border-radius: 100px;">
+                      <a href="https://t.me/blowadmin"
+                         style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px;">
+                        Чат поддержки
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 30px 0 0 0; font-size: 14px; color: #999;">
+                  Пожалуйста, не отвечайте на это письмо — оно отправлено автоматически.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="padding: 20px; font-size: 12px; color: #999999;">
+                © ${new Date().getFullYear()} BLOW. Все права защищены.
+              </td>
+            </tr>
+          </table>
+
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+          </style>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+    `,
+      });
     }
 
     if (files?.length) {

@@ -37,6 +37,6 @@ export class CityService {
   }
 
   remove(id: string) {
-    return `This action removes a #${id} city`;
+    return this.cityModel.findOneAndDelete({ _id: id }).exec();
   }
 }

@@ -17,7 +17,10 @@ export class Session {
     ref: 'User',
     default: null,
   })
-  owner: User;
+  user: User;
+
+  @Prop()
+  lastActivityAt: Date;
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);
