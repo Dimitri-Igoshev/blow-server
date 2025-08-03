@@ -53,7 +53,7 @@ export class SessionService {
     const limitValue = Number.parseInt(limit ?? '', 10);
 
     return this.sessionModel
-      .find({ owner: userId })
+      .find({ userId: userId })
       .sort({ createdAt: -1 })
       .limit(Number.isNaN(limitValue) ? 10 : limitValue)
       .exec();
