@@ -17,7 +17,7 @@ export class Session {
     ref: 'User',
     default: null,
   })
-  user: User;
+  userId: User;
 
   @Prop()
   lastActivityAt: Date;
