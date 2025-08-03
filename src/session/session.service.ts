@@ -67,7 +67,7 @@ export class SessionService {
   //   return `This action updates a #${id} session`;
   // }
 
-  // remove(id: number) {
-  //   return `This action removes a #${id} session`;
-  // }
+  remove(id: string) {
+    return this.sessionModel.findOneAndDelete({ _id: id }).exec();
+  }
 }

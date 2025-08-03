@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Query, Req, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Req,
+  Patch,
+  Delete,
+  Param,
+} from '@nestjs/common';
 import { SessionService } from './session.service';
 import { Request } from 'express';
 // import { CreateSessionDto } from './dto/create-session.dto';
@@ -53,8 +63,8 @@ export class SessionController {
   //   return this.sessionService.update(+id, updateSessionDto);
   // }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.sessionService.remove(+id);
-  // }
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.sessionService.remove(id);
+  }
 }
