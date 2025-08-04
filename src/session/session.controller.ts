@@ -20,7 +20,7 @@ export class SessionController {
 
   @Post()
   async createSession(@Req() req: Request, @Body() body: { userId: string }) {
-    const ip = req.ip; // уже будет нормальный IP
+    const ip = req.ip || ''; // уже будет нормальный IP
     const userAgent = req.headers['user-agent'] || '';
     return this.sessionService.create(body.userId, ip, userAgent);
   }
