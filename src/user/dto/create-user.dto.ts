@@ -24,4 +24,5 @@ export class CreateUserDto {
   company?: string;
   confirmToken?: string;
   updatedAt?: any;
+  blockList?: string[];
 }

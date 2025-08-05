@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Message } from './entities/message.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { format } from 'date-fns';
-import { UserStatus } from 'src/user/entities/user.entity'
+import { UserStatus } from 'src/user/entities/user.entity';
 
 interface MessageNotificationParams {
   recipient: any;
@@ -102,16 +102,28 @@ export class ChatService {
     });
   }
 
-  async createMessage(data): Promise<Message> {
+  async createMessage(data) {
     const chat = await this.findOrCreateChat({
       sender: data?.sender || '',
       recipient: data?.recipient || '',
     });
 
+    // проверка на блок
+
+    const candidate = await this.userModel
+      .findOne({ _id: data?.recipient })
+      .exec();
+
+    const isBlocked = candidate?.blockList?.includes(data.sender);
+
+    if (isBlocked) return;
+
     const message = new this.messageModel({
       chat: chat._id,
       ...data,
     });
+
+    // можно на фронте сначала загружать файл, потом добавлять его url в data. Тогда здесь ни чего менять не нужно.
 
     await this.chatModel
       .findOneAndUpdate(
@@ -165,7 +177,7 @@ export class ChatService {
 
     const filter: Record<string, any> = {};
     if (search) {
-      filter.text = { $regex: search, $options: 'i' }
+      filter.text = { $regex: search, $options: 'i' };
     }
     if (userId) filter.$or = [{ sender: userId }, { recipient: userId }];
 

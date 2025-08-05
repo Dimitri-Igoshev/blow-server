@@ -30,4 +30,5 @@ export class UpdateUserDto {
   raisedAt?: any;
   balance?: any;
   lastMailing?: string;
+  blockList?: string[];
 }

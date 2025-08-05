@@ -160,6 +160,15 @@ export class User {
 
   @Prop()
   lastMailing: string;
+
+  @Prop([
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+  ])
+  blockList: User[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
