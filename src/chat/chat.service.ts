@@ -114,7 +114,11 @@ export class ChatService {
       .findOne({ _id: data?.recipient })
       .exec();
 
-    const isBlocked = candidate?.blockList?.includes(data.sender);
+    const me = await this.userModel.findOne({ _id: data?.sender }).exec();
+
+    const isBlocked =
+      candidate?.blockList?.some((id) => String(id) === String(data.sender)) ||
+      me?.blockList?.some((id) => String(id) === String(data.recipient));
 
     if (isBlocked) return;
 
