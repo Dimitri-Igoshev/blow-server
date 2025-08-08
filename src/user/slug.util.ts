@@ -6,6 +6,7 @@ export function base62FromObjectId(id: string): string {
   const buf = Types.ObjectId.createFromHexString(id).id; // Buffer(12)
   let num = 0n;
   for (const b of buf) num = (num << 8n) + BigInt(b);
+
   if (num === 0n) return '0';
   let out = '';
   while (num > 0n) {

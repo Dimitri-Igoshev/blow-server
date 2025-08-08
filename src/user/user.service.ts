@@ -839,8 +839,7 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate =
-      user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
+    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
