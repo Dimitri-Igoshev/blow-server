@@ -91,7 +91,6 @@ export class UserService {
   async publicCount() {
     return this.userModel
       .countDocuments({
-        isPublic: true,
         status: { $ne: 'inactive' }, // подправь под свои статусы
         // не банен и т.д.
       })
@@ -102,7 +101,7 @@ export class UserService {
   async listPublicForSitemap(skip = 0, limit = 45000) {
     const docs = await this.userModel
       .find(
-        { isPublic: true, status: { $ne: 'inactive' } }, // + свои условия
+        { status: { $ne: 'inactive' } }, // + свои условия
         {
           slug: 1,
           shortId: 1,
