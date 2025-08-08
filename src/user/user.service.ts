@@ -105,7 +105,6 @@ export class UserService {
         {
           slug: 1,
           shortId: 1,
-          updatedAt: 1,
           firstName: 1,
           age: 1,
           city: 1,
@@ -116,17 +115,21 @@ export class UserService {
       .lean()
       .exec();
 
-    // гарантируем slug/shortId + фильтруем незаполненных
-    const out: { slug?: string; shortId?: string; updatedAt?: string }[] = [];
+    const out: { slug: string; shortId?: string; updatedAt?: string }[] = [];
+
     for (const u of docs) {
       const ensured = await this.ensureSlugAndShortId(u);
-      if (!this.isCompletedProfile(ensured)) continue;
+
+      // только базовая проверка, чтобы не было пустого URL
+      if (!ensured.slug && !ensured.shortId) continue;
+
       out.push({
         slug: ensured.slug,
         shortId: ensured.shortId,
         updatedAt: ensured.updatedAt?.toISOString?.() ?? ensured.updatedAt,
       });
     }
+
     return out;
   }
 
