@@ -27,6 +27,31 @@ import { BuyServiceDto } from 'src/services/dto/buy-service.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get('by-slug/:slug')
+  findBySlug(@Param('slug') slug: string) {
+    return this.userService.findBySlug(slug);
+  }
+
+  // ПЕРЕД @Get(':id')
+  @Get('public/count')
+  publicCount() {
+    return this.userService.publicCount();
+  }
+
+  // ПЕРЕД @Get(':id')
+  @Get('public')
+  publicList(@Query('skip') skip?: string, @Query('limit') limit?: string) {
+    const s = Number.parseInt(skip ?? '0', 10);
+    const l = Number.parseInt(limit ?? '45000', 10);
+    return this.userService.listPublicForSitemap(s, l);
+  }
+
+  // для middleware редиректа
+  @Get('slug-by-id/:id')
+  slugById(@Param('id') id: string) {
+    return this.userService.slugById(id);
+  }
+
   @UseGuards(JwtGuard)
   @Get('me')
   getMe(@UserId() id: string) {

@@ -45,6 +45,13 @@ export interface ISession {
   userAgent: any;
 }
 
+export enum SlugStatus {
+  Auto = 'auto',
+  Pending = 'pending',
+  Approved = 'approved',
+  Rejected = 'rejected',
+}
+
 @Schema()
 export class User {
   @Prop({ required: true, unique: true })
@@ -169,6 +176,21 @@ export class User {
     },
   ])
   blockList: User[];
+
+  @Prop({ sparse: true })
+  slug?: string;
+
+  @Prop({ sparse: true })
+  shortId?: string;
+
+  @Prop({ enum: SlugStatus, default: SlugStatus.Auto })
+  slugStatus?: SlugStatus;
+
+  @Prop({ default: false })
+  isPublic?: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.index({ slug: 1 }, { unique: true, sparse: true });
+UserSchema.index({ shortId: 1 }, { unique: true, sparse: true });

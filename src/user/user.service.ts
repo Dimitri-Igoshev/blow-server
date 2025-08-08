@@ -24,6 +24,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Session } from 'src/session/entities/session.entity';
 import { Guest } from 'src/guest/entities/guest.entity';
 import { format } from 'date-fns';
+import { base62FromObjectId, buildBaseSlug } from './slug.util';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -43,6 +44,108 @@ export class UserService {
 
   saltOrRounds = 12;
 
+  /** Проверяет, существует ли slug у другого пользователя */
+  private async slugExists(slug: string, excludeId?: string) {
+    const q: any = { slug };
+    if (excludeId) q._id = { $ne: excludeId };
+    const cnt = await this.userModel.countDocuments(q).exec();
+    return cnt > 0;
+  }
+
+  /** Возвращает уникальный slug, добавляя -2, -3, ... если нужно */
+  private async ensureUniqueSlug(base: string, excludeId?: string) {
+    let candidate = base || 'user';
+    let n = 2;
+    while (await this.slugExists(candidate, excludeId)) {
+      candidate = `${base}-${n++}`;
+    }
+    return candidate;
+  }
+
+  /** Автогенерация slug и shortId (если нет) */
+  private async ensureSlugAndShortId(user: any) {
+    const id = String(user._id);
+    const shortId = user.shortId || base62FromObjectId(id);
+
+    let slug = user.slug;
+    if (!slug) {
+      const base = buildBaseSlug(user.firstName, user.age, user.city);
+      slug = await this.ensureUniqueSlug(base, id);
+    }
+
+    const patch: any = {};
+    if (user.shortId !== shortId) patch.shortId = shortId;
+    if (user.slug !== slug) {
+      patch.slug = slug;
+      patch.slugStatus = user.slugStatus ?? 'auto'; // можно ввести поле статуса
+    }
+
+    if (Object.keys(patch).length) {
+      await this.userModel.updateOne({ _id: id }, { $set: patch }).exec();
+      return { ...user, ...patch };
+    }
+    return user;
+  }
+
+  /** Публичный и заполненный профиль? Используй свои реальные правила */
+  private isCompletedProfile(u: any) {
+    const hasPhoto = Array.isArray(u.photos) && u.photos.length > 0;
+    return Boolean(u.firstName && u.age && u.city && hasPhoto);
+  }
+
+  async publicCount() {
+    return this.userModel
+      .countDocuments({
+        isPublic: true,
+        status: { $ne: 'inactive' }, // подправь под свои статусы
+        // не банен и т.д.
+      })
+      .exec()
+      .then((count) => ({ count }));
+  }
+
+  async listPublicForSitemap(skip = 0, limit = 45000) {
+    const docs = await this.userModel
+      .find(
+        { isPublic: true, status: { $ne: 'inactive' } }, // + свои условия
+        {
+          slug: 1,
+          shortId: 1,
+          updatedAt: 1,
+          firstName: 1,
+          age: 1,
+          city: 1,
+          photos: 1,
+        },
+        { skip, limit, sort: { updatedAt: -1 } },
+      )
+      .lean()
+      .exec();
+
+    // гарантируем slug/shortId + фильтруем незаполненных
+    const out: { slug?: string; shortId?: string; updatedAt?: string }[] = [];
+    for (const u of docs) {
+      const ensured = await this.ensureSlugAndShortId(u);
+      if (!this.isCompletedProfile(ensured)) continue;
+      out.push({
+        slug: ensured.slug,
+        shortId: ensured.shortId,
+        updatedAt: ensured.updatedAt?.toISOString?.() ?? ensured.updatedAt,
+      });
+    }
+    return out;
+  }
+
+  async slugById(id: string) {
+    const user = await this.userModel
+      .findById(id, { slug: 1, shortId: 1 })
+      .lean()
+      .exec();
+    if (!user) throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    const ensured = await this.ensureSlugAndShortId(user);
+    return { slug: ensured.slug, shortId: ensured.shortId };
+  }
+
   async create(data: CreateUserDto, file?: MFile) {
     const isExist = await this.getUserByEmail(data.email);
 
@@ -61,6 +164,7 @@ export class UserService {
     console.log('create', data.password, newPassword);
 
     const savedUser = await newUser.save();
+    await this.ensureSlugAndShortId(savedUser);
 
     await this.buyService({
       userId: savedUser?._id.toString(),
@@ -174,6 +278,15 @@ export class UserService {
     return users;
   }
 
+  async findBySlug(slug: string) {
+    return this.userModel
+      .findOne({ slug })
+      .select('-password')
+      .populate([{ path: 'transactions', model: 'Transaction' }])
+      .lean()
+      .exec();
+  }
+
   async findOne(id: string) {
     return await this.userModel
       .findOne({ _id: id })
@@ -193,14 +306,27 @@ export class UserService {
 
     const result = await this.userModel
       .findOneAndUpdate({ _id: id }, { ...body }, { new: true })
+      .lean<User>() // чтобы TS видел твои поля
       .exec();
 
     if (!result) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
 
+    // проверяем необходимость генерации slug/shortId
+    if (
+      !result.slugStatus ||
+      result.slugStatus === 'auto' ||
+      result.slugStatus === 'pending'
+    ) {
+      await this.ensureSlugAndShortId(result);
+    }
+
     if (isBlocking) {
-      const formattedDate = format(new Date(Date.now()), "dd MM yyyy 'в' HH:mm");
+      const formattedDate = format(
+        new Date(Date.now()),
+        "dd MM yyyy 'в' HH:mm",
+      );
 
       this.mailerService.sendMail({
         to: result?.email,
@@ -291,7 +417,8 @@ export class UserService {
 
         return this.userModel
           .findOneAndUpdate(
-            { _id: result.id },
+            //@ts-ignore
+            { _id: result._id },
             {
               photos: [...result.photos, ...images],
               videoUrl: videoUrl[0],
@@ -712,7 +839,8 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
+    const canActivate =
+      user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
