@@ -233,5 +233,7 @@ run().catch((e) => {
   process.exit(1);
 });
 
-// DRY_RUN=1 REBUILD_AUTO_SLUGS=1 MONGODB_URI="mongodb://gen_user:%7C1q%3Aam%26%25T7JZiD@109.73.205.45:27017/blow?authSource=admin&directConnection=true" \
+// DRY_RUN=1
+
+// REBUILD_AUTO_SLUGS=1 MONGODB_URI="mongodb://gen_user:%7C1q%3Aam%26%25T7JZiD@109.73.205.45:27017/blow?authSource=admin&directConnection=true" \
 // npx ts-node ./scripts/ensure-slugs.ts
