@@ -1,12 +1,13 @@
 /* eslint-disable no-console */
 import mongoose, { Types } from "mongoose";
-// ⚠️ Путь проверь: из /scripts к файлу сущности
 import { UserSchema } from "../src/user/entities/user.entity";
 
-// --- helpers ---
+const REBUILD_AUTO_SLUGS = process.env.REBUILD_AUTO_SLUGS === "1";
+const DRY_RUN = process.env.DRY_RUN === "1";
+
 const BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 function base62FromObjectId(id: string): string {
-  const buf = Types.ObjectId.createFromHexString(id).id; // Buffer(12)
+  const buf = Types.ObjectId.createFromHexString(id).id;
   let num = 0n;
   for (const b of buf) num = (num << 8n) + BigInt(b);
   if (num === 0n) return "0";
@@ -34,23 +35,17 @@ function buildBaseSlug(firstName?: string, age?: number, city?: string): string 
   return slugify(parts.join("-")) || "user";
 }
 
-// --- main ---
 async function run() {
   const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error("MONGODB_URI is required");
-  }
+  if (!uri) throw new Error("MONGODB_URI is required");
 
   await mongoose.connect(uri);
-
-  // ⬇️ РЕГИСТРИРУЕМ схему перед использованием
   const UserModel = mongoose.model("User", UserSchema);
 
   const cursor = UserModel.find(
     {},
-    { slug: 1, shortId: 1, firstName: 1, age: 1, city: 1 }
-  )
-    .cursor();
+    { slug: 1, slugStatus: 1, aliases: 1, shortId: 1, firstName: 1, age: 1, city: 1 }
+  ).cursor();
 
   let processed = 0;
   let patched = 0;
@@ -59,28 +54,59 @@ async function run() {
     processed++;
     const id = String(u._id);
     const patch: any = {};
+    const setOnInsert: any = {};
 
-    if (!u.shortId) patch.shortId = base62FromObjectId(id);
+    // 1) shortId — только если отсутствует (НЕ меняем существующий!)
+    if (!u.shortId) {
+      setOnInsert.shortId = base62FromObjectId(id);
+    }
 
+    // 2) slug
+    const base = buildBaseSlug(u.firstName, u.age, u.city);
+
+    // (а) если нет slug — создаём
     if (!u.slug) {
-      const base = buildBaseSlug(u.firstName, u.age, u.city);
-      // обеспечиваем уникальность
       let candidate = base || "user";
       let n = 2;
-      // проверяем уникальность в БД
+      // избегаем коллизий
       // eslint-disable-next-line no-await-in-loop
       while (await UserModel.countDocuments({ slug: candidate, _id: { $ne: id } })) {
         candidate = `${base}-${n++}`;
       }
       patch.slug = candidate;
       patch.slugStatus = "auto";
+    } else if (REBUILD_AUTO_SLUGS && u.slugStatus === "auto") {
+      // (б) пересчёт авто-слигов, если пришли новые firstName/age/city
+      let candidate = base || "user";
+      if (candidate !== u.slug) {
+        let n = 2;
+        // eslint-disable-next-line no-await-in-loop
+        while (await UserModel.countDocuments({ slug: candidate, _id: { $ne: id } })) {
+          candidate = `${base}-${n++}`;
+        }
+        // сохраним старый слаг в aliases (для редиректов)
+        const aliases = Array.isArray(u.aliases) ? u.aliases : [];
+        if (!aliases.includes(u.slug)) aliases.push(u.slug);
+
+        patch.slug = candidate;
+        patch.slugStatus = "auto";
+        patch.aliases = aliases;
+      }
     }
 
-    if (Object.keys(patch).length) {
+    if (Object.keys(patch).length || Object.keys(setOnInsert).length) {
       patched++;
-      console.log(`→ ${id} ${u.slug || "(no slug)"} ->`, patch);
-      // eslint-disable-next-line no-await-in-loop
-      await UserModel.updateOne({ _id: id }, { $set: patch });
+      console.log(
+        `→ ${id} ${u.slug || "(no slug)"} ->`,
+        { setOnInsert, patch },
+        DRY_RUN ? "[DRY_RUN]" : ""
+      );
+      if (!DRY_RUN) {
+        await UserModel.updateOne(
+          { _id: id },
+          { ...(Object.keys(patch).length ? { $set: patch } : {}), ...(Object.keys(setOnInsert).length ? { $setOnInsert: setOnInsert } : {}) }
+        );
+      }
     }
 
     if (processed % 1000 === 0) {
