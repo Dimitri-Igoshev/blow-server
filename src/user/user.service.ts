@@ -212,7 +212,12 @@ export class UserService {
       filter.activity = { $gte: fiveMinutesAgo };
     }
 
-    if (search) filter.firstName = { $regex: search, $options: 'i' };
+    if (search) {
+      filter.$or = [
+        { firstName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
     if (active) filter.status = UserStatus.ACTIVE;
     if (status && status !== UserStatus.ALL) filter.status = status;
     if (sex) filter.sex = sex;
