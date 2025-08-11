@@ -23,16 +23,16 @@ import { GuestModule } from './guest/guest.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    // MongooseModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: async (configService: ConfigService) => ({
-    //     uri: configService.get<string>('MONGODB_URI'),
-    //   }),
-    //   inject: [ConfigService],
-    // }),
-    // MongooseModule.forRoot(
-    //   'mongodb://gen_user:%7C1q%3Aam%26%25T7JZiD@109.73.205.45:27017/blow?authSource=admin&directConnection=true',
-    // ),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
+      }),
+      inject: [ConfigService],
+    }),
+    MongooseModule.forRoot(
+      'mongodb://gen_user:%7C1q%3Aam%26%25T7JZiD@109.73.205.45:27017/blow?authSource=admin&directConnection=true',
+    ),
     // MailerModule.forRoot({
     //   transport: {
     //     host: 'smtp.timeweb.ru',
@@ -53,7 +53,7 @@ import { GuestModule } from './guest/guest.module';
       transport: {
         host: 'smtp.timeweb.ru',
         port: 25,
-        ignoreTLS: true,
+        // ignoreTLS: true,
         secure: false,
         auth: {
           user: 'support@blow.ru',
