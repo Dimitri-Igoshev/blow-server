@@ -12,8 +12,8 @@ import { ChatModule } from './chat/chat.module';
 import { MailingModule } from './mailing/mailing.module';
 import { PaymentModule } from './payment/payment.module';
 import { HttpModule } from '@nestjs/axios';
-import { MailerModule } from '@nestjs-modules/mailer'
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter'
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { ClaimModule } from './claim/claim.module';
 import { TopUpModule } from './top-up/top-up.module';
 import { CityModule } from './city/city.module';
@@ -30,14 +30,30 @@ import { GuestModule } from './guest/guest.module';
     //   }),
     //   inject: [ConfigService],
     // }),
-    MongooseModule.forRoot(
-      'mongodb://gen_user:%7C1q%3Aam%26%25T7JZiD@109.73.205.45:27017/blow?authSource=admin&directConnection=true',
-    ),
+    // MongooseModule.forRoot(
+    //   'mongodb://gen_user:%7C1q%3Aam%26%25T7JZiD@109.73.205.45:27017/blow?authSource=admin&directConnection=true',
+    // ),
+    // MailerModule.forRoot({
+    //   transport: {
+    //     host: 'smtp.timeweb.ru',
+    //     port: 587, // или 465
+    //     secure: false, // true, если порт 465
+    //     requireTLS: true, // для 587
+    //     auth: {
+    //       user: 'support@blow.ru',
+    //       pass: 'g0ak9wyq47',
+    //     },
+    //     connectionTimeout: 10000,
+    //   },
+    //   defaults: {
+    //     from: '"Blow" <support@blow.ru>', // совпадает с доменом аутентификации
+    //   },
+    // }),
     MailerModule.forRoot({
       transport: {
         host: 'smtp.timeweb.ru',
         port: 25,
-        ignoreTLS: true,
+        // ignoreTLS: true,
         secure: false,
         auth: {
           user: 'support@blow.ru',
