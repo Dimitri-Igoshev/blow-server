@@ -17,7 +17,7 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post()
-  create(@Body() data: CreateMessageDto) {
+  create(@Body() data: any) {
     return this.chatService.createMessage(data);
   }
 
