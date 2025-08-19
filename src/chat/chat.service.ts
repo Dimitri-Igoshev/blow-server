@@ -102,53 +102,75 @@ export class ChatService {
     });
   }
 
-  async createMessage(data) {
+  async createMessage(data: {
+    sender: string;
+    recipient: string;
+    text?: string;
+    fileUrl?: string;
+  }): Promise<Message> {
+    // 1) создаём или находим чат
     const chat = await this.findOrCreateChat({
       sender: data?.sender || '',
       recipient: data?.recipient || '',
     });
 
-    // проверка на блок
-
-    const candidate = await this.userModel
-      .findOne({ _id: data?.recipient })
-      .exec();
-
-    const me = await this.userModel.findOne({ _id: data?.sender }).exec();
+    // 2) проверка блокировок
+    const [candidate, me] = await Promise.all([
+      this.userModel.findOne({ _id: data?.recipient }).exec(),
+      this.userModel.findOne({ _id: data?.sender }).exec(),
+    ]);
 
     const isBlocked =
       candidate?.blockList?.some((id) => String(id) === String(data.sender)) ||
       me?.blockList?.some((id) => String(id) === String(data.recipient));
 
-    if (isBlocked) return;
+    if (isBlocked) {
+      // Можно вернуть null или кинуть ошибку — на ваше усмотрение
+      return null as any;
+    }
 
+    // 3) создаём и сохраняем сообщение (timestamps заполнит createdAt/updatedAt)
     const message = new this.messageModel({
       chat: chat._id,
-      ...data,
+      sender: data.sender,
+      recipient: data.recipient,
+      text: data?.text ?? '',
+      fileUrl: data?.fileUrl ?? '',
     });
 
-    // можно на фронте сначала загружать файл, потом добавлять его url в data. Тогда здесь ни чего менять не нужно.
+    const savedMessage = await message.save(); // ВАЖНО: await
 
+    // 4) добавляем id сообщения в начало массива сообщений чата
+    //    (не перезаписываем весь массив и не пихаем «сырой» документ)
     await this.chatModel
-      .findOneAndUpdate(
-        { _id: chat._id },
-        { messages: [message, ...chat.messages] },
+      .findByIdAndUpdate(
+        chat._id,
+        {
+          $push: {
+            messages: { $each: [savedMessage._id], $position: 0 },
+          },
+          // опционально: поддержка «последнего сообщения»/времени
+          // $set: { lastMessageAt: savedMessage.createdAt, lastMessage: savedMessage._id },
+        },
         { new: true },
       )
       .exec();
-    const newMessage = message.save();
 
-    const sender = await this.userModel
-      .findOne({ _id: data.sender })
-      .select('-password')
-      .exec();
-    const recipient = await this.userModel
-      .findOne({ _id: data.recipient, status: UserStatus.ACTIVE })
-      .select('-password')
-      .exec();
+    // 5) подтянем отправителя/получателя для уведомления
+    const [sender, recipient] = await Promise.all([
+      this.userModel.findOne({ _id: data.sender }).select('-password').exec(),
+      this.userModel
+        .findOne({ _id: data.recipient, status: UserStatus.ACTIVE })
+        .select('-password')
+        .exec(),
+    ]);
 
-    if (!sender || !recipient) throw new Error('User not found');
+    if (!sender || !recipient) {
+      // при желании можно удалить сообщение/откатить изменения в чате
+      throw new Error('User not found');
+    }
 
+    // 6) уведомление
     this.sendNewMessageNotification({
       recipient: {
         email: recipient?.email || '',
@@ -157,12 +179,12 @@ export class ChatService {
       sender: {
         firstName: sender?.firstName || 'пользователя Blow',
       },
-      messageText: data?.text || '',
-      // chatLink: `https://blow.ru/account/dialogues/${chat._id || '1'}`,
+      messageText: savedMessage?.text || '',
       chatLink: `https://blow.ru`,
     });
 
-    return newMessage;
+    // 7) вернуть сохранённое сообщение (с корректными датами)
+    return savedMessage;
   }
 
   async getChats(userId): Promise<any[]> {
