@@ -7,7 +7,7 @@ async function bootstrap() {
     cors: true,
   });
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('server');
 
   app.set('trust proxy', true); // теперь TypeScript не ругается
 
