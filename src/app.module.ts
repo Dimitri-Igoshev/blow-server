@@ -54,7 +54,7 @@ import { GuestModule } from './guest/guest.module';
         host: 'smtp.timeweb.ru',
         port: 465,
         // ignoreTLS: true,
-        secure: false,
+        secure: true,
         auth: {
           user: 'support@blow.ru',
           pass: 'g0ak9wyq47',
