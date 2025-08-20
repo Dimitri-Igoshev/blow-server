@@ -52,9 +52,9 @@ import { GuestModule } from './guest/guest.module';
     MailerModule.forRoot({
       transport: {
         host: 'smtp.timeweb.ru',
-        port: 465,
-        // ignoreTLS: true,
-        secure: true,
+        port: 2525,
+        requireTLS: true,
+        secure: false,
         auth: {
           user: 'support@blow.ru',
           pass: 'g0ak9wyq47',
