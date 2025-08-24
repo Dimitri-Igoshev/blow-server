@@ -199,8 +199,18 @@ export class UserService {
       minage,
       maxage,
       withPhoto,
-      random
+      random,
     } = query;
+
+    // нормализуем флаги
+    const randomFlag =
+      String(random).toLowerCase() === 'true' ||
+      String(random).toLowerCase() === '1' ||
+      String(random).toLowerCase() === 'yes';
+
+    const limitValueRaw = Number.parseInt(limit ?? '', 10);
+    const limitValue =
+      Number.isNaN(limitValueRaw) || limitValueRaw < 1 ? 10 : limitValueRaw;
 
     const filter: any = admin
       ? { role: { $ne: UserRole.ADMIN } }
@@ -209,8 +219,8 @@ export class UserService {
         : {};
 
     if (online) {
-      const fiveMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      filter.activity = { $gte: fiveMinutesAgo };
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      filter.activity = { $gte: thirtyMinutesAgo };
     }
 
     if (search) {
@@ -219,10 +229,12 @@ export class UserService {
         { email: { $regex: search, $options: 'i' } },
       ];
     }
+
     if (active) filter.status = UserStatus.ACTIVE;
-    if (status && status !== UserStatus.ALL) filter.status = status;
+    if (status && status !== UserStatus.ALL) filter.status = status as any;
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
+
     if (minage || maxage) {
       filter.age = {
         $gte: parseInt(minage || '0', 10),
@@ -231,13 +243,12 @@ export class UserService {
     }
 
     if (withPhoto) {
-      filter.photos = { $exists: true, $not: { $size: 0 } };
+      // у документов должны быть фото (не пустой массив)
+      filter.photos = { $exists: true, $ne: [] };
     }
 
     const now = new Date();
     const topIdStr = String(TOP_ID);
-
-    const limitValue = Number.parseInt(limit ?? '', 10);
 
     const basePipeline: any[] = [
       { $match: filter },
@@ -266,41 +277,49 @@ export class UserService {
       },
     ];
 
-    if (random) {
+    if (randomFlag) {
+      // TOP впереди (по raisedAt), остальные — случайные 100; вернуть первые limitValue
       basePipeline.push(
         {
-          $addFields: {
-            randomSortKey: {
-              $multiply: [{ $rand: {} }, { $toLong: '$createdAt' }],
-            },
+          $facet: {
+            top: [
+              { $match: { isTop: true } },
+              { $sort: { raisedAt: -1 } },
+              { $limit: limitValue }, // не вытягиваем лишние TOP сверх нужного лимита
+            ],
+            rest: [
+              { $match: { isTop: false } },
+              { $sample: { size: 100 } }, // случайные 100
+            ],
           },
         },
         {
-          $sort: {
-            isTop: -1, // топы первыми
-            raisedAt: -1, // топы внутри по дате
-            randomSortKey: -1, // остальные перемешаны по дате
+          $project: {
+            merged: { $concatArrays: ['$top', '$rest'] },
           },
         },
+        { $unwind: '$merged' },
+        { $replaceRoot: { newRoot: '$merged' } },
+        { $limit: limitValue },
+        { $project: { password: 0 } },
       );
     } else {
-      basePipeline.push({
-        $sort: {
-          isTop: -1,
-          raisedAt: -1,
-          updatedAt: -1,
-          createdAt: -1,
+      // классическая сортировка
+      basePipeline.push(
+        {
+          $sort: {
+            isTop: -1,
+            raisedAt: -1,
+            updatedAt: -1,
+            createdAt: -1,
+          },
         },
-      });
+        { $limit: limitValue },
+        { $project: { password: 0 } },
+      );
     }
 
-    basePipeline.push(
-      { $limit: Number.isNaN(limitValue) ? 10 : limitValue },
-      { $project: { password: 0 } },
-    );
-
     const users = await this.userModel.aggregate(basePipeline).exec();
-
     return users;
   }
 
