@@ -199,6 +199,7 @@ export class UserService {
       minage,
       maxage,
       withPhoto,
+      random,
     } = query;
 
     const filter: any = admin
@@ -238,44 +239,67 @@ export class UserService {
 
     const limitValue = Number.parseInt(limit ?? '', 10);
 
-    const users = await this.userModel
-      .aggregate([
-        { $match: filter },
-        {
-          $addFields: {
-            isTop: {
-              $gt: [
-                {
-                  $size: {
-                    $filter: {
-                      input: { $ifNull: ['$services', []] },
-                      as: 's',
-                      cond: {
-                        $and: [
-                          { $eq: [{ $toString: '$$s._id' }, topIdStr] },
-                          { $gt: [{ $toDate: '$$s.expiredAt' }, now] },
-                        ],
-                      },
+    const basePipeline: any[] = [
+      { $match: filter },
+      {
+        $addFields: {
+          isTop: {
+            $gt: [
+              {
+                $size: {
+                  $filter: {
+                    input: { $ifNull: ['$services', []] },
+                    as: 's',
+                    cond: {
+                      $and: [
+                        { $eq: [{ $toString: '$$s._id' }, topIdStr] },
+                        { $gt: [{ $toDate: '$$s.expiredAt' }, now] },
+                      ],
                     },
                   },
                 },
-                0,
-              ],
+              },
+              0,
+            ],
+          },
+        },
+      },
+    ];
+
+    if (filter?.random) {
+      basePipeline.push(
+        {
+          $addFields: {
+            randomSortKey: {
+              $multiply: [{ $rand: {} }, { $toLong: '$createdAt' }],
             },
           },
         },
         {
           $sort: {
-            isTop: -1,
-            raisedAt: -1,
-            updatedAt: -1,
-            createdAt: -1,
+            isTop: -1, // топы первыми
+            raisedAt: -1, // топы внутри по дате
+            randomSortKey: -1, // остальные перемешаны по дате
           },
         },
-        { $limit: Number.isNaN(limitValue) ? 10 : limitValue },
-        { $project: { password: 0 } },
-      ])
-      .exec();
+      );
+    } else {
+      basePipeline.push({
+        $sort: {
+          isTop: -1,
+          raisedAt: -1,
+          updatedAt: -1,
+          createdAt: -1,
+        },
+      });
+    }
+
+    basePipeline.push(
+      { $limit: Number.isNaN(limitValue) ? 10 : limitValue },
+      { $project: { password: 0 } },
+    );
+
+    const users = await this.userModel.aggregate(basePipeline).exec();
 
     return users;
   }

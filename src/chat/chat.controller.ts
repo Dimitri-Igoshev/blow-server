@@ -9,8 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import type { EditMessageDto } from './dto/update-message.dto';
+import { EditMessageDto } from './dto/update-message.dto';
 
 @Controller('chat')
 export class ChatController {
