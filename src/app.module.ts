@@ -19,6 +19,7 @@ import { TopUpModule } from './top-up/top-up.module';
 import { CityModule } from './city/city.module';
 import { SessionModule } from './session/session.module';
 import { GuestModule } from './guest/guest.module';
+import { EmailingModule } from './emailing/emailing.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { GuestModule } from './guest/guest.module';
     CityModule,
     SessionModule,
     GuestModule,
+    EmailingModule,
   ],
 })
 export class AppModule {}

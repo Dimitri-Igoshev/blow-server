@@ -199,7 +199,18 @@ export class UserService {
       minage,
       maxage,
       withPhoto,
+      random,
     } = query;
+
+    // нормализуем флаги
+    const randomFlag =
+      String(random).toLowerCase() === 'true' ||
+      String(random).toLowerCase() === '1' ||
+      String(random).toLowerCase() === 'yes';
+
+    const limitValueRaw = Number.parseInt(limit ?? '', 10);
+    const limitValue =
+      Number.isNaN(limitValueRaw) || limitValueRaw < 1 ? 10 : limitValueRaw;
 
     const filter: any = admin
       ? { role: { $ne: UserRole.ADMIN } }
@@ -208,8 +219,8 @@ export class UserService {
         : {};
 
     if (online) {
-      const fiveMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      filter.activity = { $gte: fiveMinutesAgo };
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      filter.activity = { $gte: thirtyMinutesAgo };
     }
 
     if (search) {
@@ -218,10 +229,12 @@ export class UserService {
         { email: { $regex: search, $options: 'i' } },
       ];
     }
+
     if (active) filter.status = UserStatus.ACTIVE;
-    if (status && status !== UserStatus.ALL) filter.status = status;
+    if (status && status !== UserStatus.ALL) filter.status = status as any;
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
+
     if (minage || maxage) {
       filter.age = {
         $gte: parseInt(minage || '0', 10),
@@ -230,40 +243,69 @@ export class UserService {
     }
 
     if (withPhoto) {
-      filter.photos = { $exists: true, $not: { $size: 0 } };
+      // у документов должны быть фото (не пустой массив)
+      filter.photos = { $exists: true, $ne: [] };
     }
 
     const now = new Date();
     const topIdStr = String(TOP_ID);
 
-    const limitValue = Number.parseInt(limit ?? '', 10);
-
-    const users = await this.userModel
-      .aggregate([
-        { $match: filter },
-        {
-          $addFields: {
-            isTop: {
-              $gt: [
-                {
-                  $size: {
-                    $filter: {
-                      input: { $ifNull: ['$services', []] },
-                      as: 's',
-                      cond: {
-                        $and: [
-                          { $eq: [{ $toString: '$$s._id' }, topIdStr] },
-                          { $gt: [{ $toDate: '$$s.expiredAt' }, now] },
-                        ],
-                      },
+    const basePipeline: any[] = [
+      { $match: filter },
+      {
+        $addFields: {
+          isTop: {
+            $gt: [
+              {
+                $size: {
+                  $filter: {
+                    input: { $ifNull: ['$services', []] },
+                    as: 's',
+                    cond: {
+                      $and: [
+                        { $eq: [{ $toString: '$$s._id' }, topIdStr] },
+                        { $gt: [{ $toDate: '$$s.expiredAt' }, now] },
+                      ],
                     },
                   },
                 },
-                0,
-              ],
-            },
+              },
+              0,
+            ],
           },
         },
+      },
+    ];
+
+    if (randomFlag) {
+      // TOP впереди (по raisedAt), остальные — случайные 100; вернуть первые limitValue
+      basePipeline.push(
+        {
+          $facet: {
+            top: [
+              { $match: { isTop: true } },
+              { $sort: { raisedAt: -1 } },
+              { $limit: limitValue }, // не вытягиваем лишние TOP сверх нужного лимита
+            ],
+            rest: [
+              { $match: { isTop: false } },
+              { $sample: { size: 100 } }, // случайные 100
+            ],
+          },
+        },
+        {
+          $project: {
+            merged: { $concatArrays: ['$top', '$rest'] },
+          },
+        },
+        { $unwind: '$merged' },
+        { $replaceRoot: { newRoot: '$merged' } },
+        { $limit: limitValue },
+        { $project: { password: 0 } },
+      );
+    } else {
+      // классическая сортировка
+      basePipeline.push(
         {
           $sort: {
             isTop: -1,
@@ -272,11 +314,12 @@ export class UserService {
             createdAt: -1,
           },
         },
-        { $limit: Number.isNaN(limitValue) ? 10 : limitValue },
+        { $limit: limitValue },
         { $project: { password: 0 } },
-      ])
-      .exec();
+      );
+    }
 
+    const users = await this.userModel.aggregate(basePipeline).exec();
     return users;
   }
 
@@ -336,68 +379,68 @@ export class UserService {
         subject: `Новое сообщение от администрации — BLOW`,
         text: `Ваш аккаунт заблокирован`,
         html: `
-<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Новое сообщение — BLOW</title>
-  </head>
-  <body style="margin:0; padding:0; background-color:#f9f9f9;">
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f9f9f9;">
-      <tr>
-        <td align="center" style="padding: 40px 0;">
-          <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="background-color:#ffffff; border-radius:8px; overflow:hidden; font-family: 'Montserrat', Arial, sans-serif;">
-            <!-- Header -->
-            <tr>
-              <td align="center" bgcolor="#e31e24" style="padding: 20px;">
-                <img src="https://blow.igoshev.de/blow-logo.png" alt="BLOW Logo" width="160" style="display: block;" />
-              </td>
-            </tr>
+    <!DOCTYPE html>
+    <html lang="ru">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Новое сообщение — BLOW</title>
+      </head>
+      <body style="margin:0; padding:0; background-color:#f9f9f9;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f9f9f9;">
+          <tr>
+            <td align="center" style="padding: 40px 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="background-color:#ffffff; border-radius:8px; overflow:hidden; font-family: 'Montserrat', Arial, sans-serif;">
+                <!-- Header -->
+                <tr>
+                  <td align="center" bgcolor="#e31e24" style="padding: 20px;">
+                    <img src="https://blow.igoshev.de/blow-logo.png" alt="BLOW Logo" width="160" style="display: block;" />
+                  </td>
+                </tr>
 
-            <!-- Body -->
-            <tr>
-              <td style="padding: 30px 40px; color: #333333; font-size: 16px; line-height: 1.5;">
-                <h2 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 600;">Новое сообщение</h2>
-                <p style="margin: 0 0 16px 0;">Здравствуйте, ${result?.firstName}!</p>
-                <p style="margin: 0 0 16px 0;">
-                  Ваша анкета на платформе <strong>BLOW</strong> была заблокирована. Для уточнения причин обратитесь в службу поддержки.
-                </p>
-                <p style="margin: 0 0 16px 0; font-size: 14px; color: #666;">Дата и время: ${formattedDate}</p>
+                <!-- Body -->
+                <tr>
+                  <td style="padding: 30px 40px; color: #333333; font-size: 16px; line-height: 1.5;">
+                    <h2 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 600;">Новое сообщение</h2>
+                    <p style="margin: 0 0 16px 0;">Здравствуйте, ${result?.firstName}!</p>
+                    <p style="margin: 0 0 16px 0;">
+                      Ваша анкета на платформе <strong>BLOW</strong> была заблокирована. Для уточнения причин обратитесь в службу поддержки.
+                    </p>
+                    <p style="margin: 0 0 16px 0; font-size: 14px; color: #666;">Дата и время: ${formattedDate}</p>
 
-                <!-- CTA Button -->
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
-                  <tr>
-                    <td align="center" bgcolor="#e31e24" style="border-radius: 100px;">
-                      <a href="https://t.me/blowadmin"
-                         style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px;">
-                        Чат поддержки
-                      </a>
-                    </td>
-                  </tr>
-                </table>
+                    <!-- CTA Button -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+                      <tr>
+                        <td align="center" bgcolor="#e31e24" style="border-radius: 100px;">
+                          <a href="https://t.me/blowadmin"
+                            style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px;">
+                            Чат поддержки
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
 
-                <p style="margin: 30px 0 0 0; font-size: 14px; color: #999;">
-                  Пожалуйста, не отвечайте на это письмо — оно отправлено автоматически.
-                </p>
-              </td>
-            </tr>
+                    <p style="margin: 30px 0 0 0; font-size: 14px; color: #999;">
+                      Пожалуйста, не отвечайте на это письмо — оно отправлено автоматически.
+                    </p>
+                  </td>
+                </tr>
 
-            <!-- Footer -->
-            <tr>
-              <td align="center" style="padding: 20px; font-size: 12px; color: #999999;">
-                © ${new Date().getFullYear()} BLOW. Все права защищены.
-              </td>
-            </tr>
-          </table>
+                <!-- Footer -->
+                <tr>
+                  <td align="center" style="padding: 20px; font-size: 12px; color: #999999;">
+                    © ${new Date().getFullYear()} BLOW. Все права защищены.
+                  </td>
+                </tr>
+              </table>
 
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
-          </style>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
+              <style>
+                @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+              </style>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
     `,
       });
     }
@@ -841,7 +884,8 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
+    const canActivate =
+      user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
