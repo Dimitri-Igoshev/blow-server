@@ -303,6 +303,12 @@ export class UserService {
         { $limit: limitValue },
         { $project: { password: 0 } },
       );
+    } else if (admin) {
+      basePipeline.push(
+        { $sort: { createdAt: -1 } },
+        { $limit: limitValue },
+        { $project: { password: 0 } },
+      );
     } else {
       // классическая сортировка
       basePipeline.push(
