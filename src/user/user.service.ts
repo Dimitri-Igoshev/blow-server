@@ -680,8 +680,6 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     const transaction = new this.transactionModel({
-      createdAt: new Date(),
-      updatedAt: new Date(),
       userId: id,
       type: TransactionType.CREDIT,
       method: TransactionMethod.TEST,
@@ -746,8 +744,6 @@ export class UserService {
     }
 
     const transaction = new this.transactionModel({
-      createdAt: new Date(),
-      updatedAt: new Date(),
       userId,
       type: TransactionType.DEBIT,
       method: TransactionMethod.TEST,

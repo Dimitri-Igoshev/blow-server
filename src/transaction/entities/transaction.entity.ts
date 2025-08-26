@@ -27,7 +27,7 @@ export enum TransactionMethod {
   APPLE_PAY = 'apple-pay',
 }
 
-@Schema()
+@Schema({ timestamps: true })
 export class Transaction {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
@@ -35,12 +35,6 @@ export class Transaction {
     default: null,
   })
   userId: User;
-
-  @Prop({ default: Date.now() })
-  createdAt: Date;
-
-  @Prop({ default: Date.now() })
-  updatedAt: Date;
 
   @Prop({ type: String, enum: TransactionType, default: TransactionType.DEBIT })
   type: TransactionType;

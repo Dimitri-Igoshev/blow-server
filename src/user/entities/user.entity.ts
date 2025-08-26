@@ -52,7 +52,7 @@ export enum SlugStatus {
   Rejected = 'rejected',
 }
 
-@Schema()
+@Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, unique: true })
   email: string;
@@ -126,11 +126,11 @@ export class User {
   @Prop()
   confirmToken: string;
 
-  @Prop({ default: Date.now() })
-  createdAt: Date;
+  // @Prop({ default: Date.now() })
+  // createdAt: Date;
 
-  @Prop({ default: Date.now() })
-  updatedAt: Date;
+  // @Prop({ default: Date.now() })
+  // updatedAt: Date;
 
   @Prop({ default: Date.now() })
   raisedAt: Date;
