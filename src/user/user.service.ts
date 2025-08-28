@@ -208,11 +208,6 @@ export class UserService {
       String(random).toLowerCase() === '1' ||
       String(random).toLowerCase() === 'yes';
 
-    const withPhotoFlag =
-      String(withPhoto).toLowerCase() === 'true' ||
-      String(withPhoto).toLowerCase() === '1' ||
-      String(withPhoto).toLowerCase() === 'yes';
-
     const limitValueRaw = Number.parseInt(limit ?? '', 10);
     const limitValue =
       Number.isNaN(limitValueRaw) || limitValueRaw < 1 ? 10 : limitValueRaw;
@@ -247,13 +242,9 @@ export class UserService {
       };
     }
 
-    // ✅ Только с фото: требуем, чтобы у первой фотки был валидный url
-    if (withPhotoFlag) {
-      filter['photos.0.url'] = {
-        $exists: true,
-        $type: 'string',
-        $nin: [null, ''],
-      };
+    if (withPhoto) {
+      // у документов должны быть фото (не пустой массив)
+      filter.photos = { $exists: true, $ne: [] };
     }
 
     const now = new Date();
@@ -294,12 +285,19 @@ export class UserService {
             top: [
               { $match: { isTop: true } },
               { $sort: { raisedAt: -1 } },
-              { $limit: limitValue },
+              { $limit: limitValue }, // не вытягиваем лишние TOP сверх нужного лимита
             ],
-            rest: [{ $match: { isTop: false } }, { $sample: { size: 100 } }],
+            rest: [
+              { $match: { isTop: false } },
+              { $sample: { size: 100 } }, // случайные 100
+            ],
           },
         },
-        { $project: { merged: { $concatArrays: ['$top', '$rest'] } } },
+        {
+          $project: {
+            merged: { $concatArrays: ['$top', '$rest'] },
+          },
+        },
         { $unwind: '$merged' },
         { $replaceRoot: { newRoot: '$merged' } },
         { $limit: limitValue },
@@ -312,6 +310,7 @@ export class UserService {
         { $project: { password: 0 } },
       );
     } else {
+      // классическая сортировка
       basePipeline.push(
         {
           $sort: {
