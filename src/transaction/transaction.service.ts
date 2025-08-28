@@ -37,6 +37,7 @@ export class TransactionService {
     return this.transactionModel
       .find(filter)
       .sort({ createdAt: -1 })
+      .populate([{ path: 'userId', model: 'User' }])
       .limit(Number.isNaN(limitValue) ? 10 : limitValue)
       .exec();
   }
