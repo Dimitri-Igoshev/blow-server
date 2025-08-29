@@ -220,6 +220,10 @@ export class ChatService {
         {
           path: 'replyTo',
           model: 'Message',
+          populate: {
+            path: 'sender',
+            model: 'User',
+          },
         },
       ])
       .limit(Number.isNaN(limitValue) ? 10 : limitValue)
@@ -296,6 +300,10 @@ export class ChatService {
         {
           path: 'replyTo',
           model: 'Message',
+          populate: {
+            path: 'sender',
+            model: 'User',
+          },
         },
       ])
       .exec();
