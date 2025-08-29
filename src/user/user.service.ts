@@ -317,7 +317,7 @@ export class UserService {
             sortDate: {
               $max: [
                 { $ifNull: ['$raisedAt', new Date(0)] },
-                { $ifNull: ['$updatedAt', new Date(0)] },
+                // { $ifNull: ['$updatedAt', new Date(0)] },
                 { $ifNull: ['$createdAt', new Date(0)] },
               ],
             },
