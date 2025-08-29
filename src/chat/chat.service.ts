@@ -107,6 +107,7 @@ export class ChatService {
     recipient: string;
     text?: string;
     fileUrl?: string;
+    replyTo?: string | null;
   }): Promise<Message> {
     // 1) создаём или находим чат
     const chat = await this.findOrCreateChat({
@@ -136,6 +137,7 @@ export class ChatService {
       recipient: data.recipient,
       text: data?.text ?? '',
       fileUrl: data?.fileUrl ?? '',
+      replyTo: data?.replyTo ?? null,
     });
 
     const savedMessage = await message.save(); // ВАЖНО: await
@@ -215,6 +217,10 @@ export class ChatService {
       .populate([
         { path: 'sender', model: 'User' },
         { path: 'recipient', model: 'User' },
+        {
+          path: 'replyTo',
+          model: 'Message',
+        },
       ])
       .limit(Number.isNaN(limitValue) ? 10 : limitValue)
       .exec();
@@ -285,7 +291,13 @@ export class ChatService {
     console.log(chatId);
     return this.messageModel
       .find({ chat: chatId })
-      .populate([{ path: 'sender', model: 'User' }])
+      .populate([
+        { path: 'sender', model: 'User' },
+        {
+          path: 'replyTo',
+          model: 'Message',
+        },
+      ])
       .exec();
   }
 

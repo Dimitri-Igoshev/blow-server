@@ -17,4 +17,7 @@ export class CreateMessageDto {
   @IsOptional()
   @IsString()
   fileUrl?: string;
+
+  @IsOptional()
+  replyTo?: string | null;
 }

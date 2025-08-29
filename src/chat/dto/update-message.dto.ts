@@ -15,4 +15,7 @@ export class EditMessageDto {
   @IsOptional()
   @IsBoolean()
   isReaded?: boolean;
+
+  @IsOptional()
+  replyTo?: string | null;
 }

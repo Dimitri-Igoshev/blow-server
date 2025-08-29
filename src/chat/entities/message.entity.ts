@@ -41,6 +41,13 @@ export class Message {
   fileUrl: string;
 
   @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Message',
+    default: null,
+  })
+  replyTo: Message | null;
+
+  @Prop({
     type: Boolean,
     default: false,
   })
