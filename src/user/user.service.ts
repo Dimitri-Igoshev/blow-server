@@ -310,18 +310,27 @@ export class UserService {
         { $project: { password: 0 } },
       );
     } else {
-      // классическая сортировка
+      // сначала isTop, затем остальные; порядок внутри групп — по самой свежей дате из raisedAt/updatedAt/createdAt
       basePipeline.push(
         {
+          $addFields: {
+            sortDate: {
+              $max: [
+                { $ifNull: ['$raisedAt', new Date(0)] },
+                { $ifNull: ['$updatedAt', new Date(0)] },
+                { $ifNull: ['$createdAt', new Date(0)] },
+              ],
+            },
+          },
+        },
+        {
           $sort: {
-            isTop: -1,
-            raisedAt: -1,
-            updatedAt: -1,
-            createdAt: -1,
+            isTop: -1, // TOP вперёд
+            sortDate: -1, // чем свежее (по max из raisedAt/updatedAt/createdAt), тем выше
           },
         },
         { $limit: limitValue },
-        { $project: { password: 0 } },
+        { $project: { password: 0, sortDate: 0 } }, // sortDate — служебное
       );
     }
 
