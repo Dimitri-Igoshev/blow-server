@@ -6,7 +6,7 @@ import { UserService } from '../user/user.service'; // Путь к сервис�
 export class ActivitySchedulerService {
   constructor(private readonly userService: UserService) {}
 
-  @Cron(CronExpression.EVERY_HOUR) // Раз в час
+  @Cron(CronExpression.EVERY_30_MINUTES) // Раз в час
   handleCron() {
     console.log('Executing activity update...');
     this.userService.fakeActivity(); // Вызов метода активности
