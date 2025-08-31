@@ -189,7 +189,7 @@ export class User {
   @Prop({ default: false })
   isPublic?: boolean;
 
-  @Prop()
+  @Prop({ default: false })
   isFake?: boolean;
 }
 
