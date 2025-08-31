@@ -6,7 +6,6 @@ import { UserService } from '../user/user.service'; // Путь к сервис�
 export class ActivitySchedulerService {
   constructor(private readonly userService: UserService) {}
 
-  // Этот метод будет выполняться раз в час
   @Cron(CronExpression.EVERY_HOUR) // Раз в час
   handleCron() {
     console.log('Executing activity update...');
