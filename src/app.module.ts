@@ -54,7 +54,7 @@ import { ActivitySchedulerModule } from './activity-scheduler/activity-scheduler
     MailerModule.forRoot({
       transport: {
         host: 'smtp.timeweb.ru',
-        port: 2525,
+        port: 25,
         requireTLS: true,
         secure: false,
         auth: {
