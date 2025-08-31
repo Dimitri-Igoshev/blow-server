@@ -918,4 +918,65 @@ export class UserService {
       )
       .exec();
   }
+
+  async fakeActivity() {
+    try {
+      // 1. Получаем все анкеты с пометкой "fake"
+      const fakeUsers = await this.userModel
+        .find({ isFake: true }) // Пометка анкеты fake
+        .exec();
+
+      // 2. Рассчитываем, сколько анкеты нужно активировать в зависимости от времени суток
+      const totalUsers = fakeUsers.length;
+      const randomPercentage = this.getActivityPercentage(); // Получаем процент в зависимости от времени суток
+      const activeCount = Math.floor((randomPercentage / 100) * totalUsers);
+
+      // 3. Изменяем активность у случайных пользователей
+      const usersToActivate = this.getRandomUsers(fakeUsers, activeCount);
+
+      const updatedUsers: any[] = [];
+      const timestamp = new Date(); // Время активации
+
+      for (const user of usersToActivate) {
+        const updatedUser = await this.userModel
+          .findOneAndUpdate(
+            { _id: user._id },
+            { activity: timestamp },
+            { new: true },
+          )
+          .exec();
+        if (updatedUser) updatedUsers.push(updatedUser);
+      }
+
+      // 4. Возвращаем результат
+      return updatedUsers;
+    } catch (error: any) {
+      throw new HttpException(
+        'Error while updating activity',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // Метод для получения процента активности в зависимости от времени суток
+  private getActivityPercentage(): number {
+    const currentHour = new Date().getHours(); // Получаем текущий час
+
+    if (currentHour >= 0 && currentHour < 6) {
+      // Ночь (00:00 - 06:00)
+      return 15; // 15% ночью
+    } else if (currentHour >= 6 && currentHour < 18) {
+      // День (06:00 - 18:00)
+      return 25; // 25% днем
+    } else {
+      // Вечер (18:00 - 00:00)
+      return 35; // 35% вечером
+    }
+  }
+
+  // Метод для случайного выбора пользователей
+  private getRandomUsers(users: any[], count: number): any[] {
+    const shuffled = users.sort(() => 0.5 - Math.random()); // Перемешиваем массив
+    return shuffled.slice(0, count); // Берем первые `count` элементов
+  }
 }

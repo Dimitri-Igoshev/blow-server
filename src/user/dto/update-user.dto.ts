@@ -31,4 +31,5 @@ export class UpdateUserDto {
   balance?: any;
   lastMailing?: string;
   blockList?: string[];
+  isFake?: boolean;
 }

@@ -25,4 +25,5 @@ export class CreateUserDto {
   confirmToken?: string;
   updatedAt?: any;
   blockList?: string[];
+  isFake?: boolean;
 }

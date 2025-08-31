@@ -20,6 +20,7 @@ import { CityModule } from './city/city.module';
 import { SessionModule } from './session/session.module';
 import { GuestModule } from './guest/guest.module';
 import { EmailingModule } from './emailing/emailing.module';
+import { ActivitySchedulerModule } from './activity-scheduler/activity-scheduler.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { EmailingModule } from './emailing/emailing.module';
     SessionModule,
     GuestModule,
     EmailingModule,
+    ActivitySchedulerModule,
   ],
 })
 export class AppModule {}

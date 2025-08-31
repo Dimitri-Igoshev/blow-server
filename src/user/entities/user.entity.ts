@@ -188,6 +188,9 @@ export class User {
 
   @Prop({ default: false })
   isPublic?: boolean;
+
+  @Prop()
+  isFake?: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
