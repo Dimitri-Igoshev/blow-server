@@ -16,11 +16,16 @@ export class WithdrawalService {
     return await newWithdrawal.save();
   }
 
-  async findAll(query: any) {
-    return await this.withdrawalModel
+  async findAll(query: Record<string, string>) {
+    const { limit, userId } = query;
+
+    const limitValue = Number.parseInt(limit ?? '', 10);
+
+    return this.withdrawalModel
       .find()
       .populate([{ path: 'user', model: 'User' }])
-      .sort({ order: -1 })
+      .sort({ createdAt: -1 })
+      .limit(Number.isNaN(limitValue) ? 10 : limitValue)
       .exec();
   }
 
