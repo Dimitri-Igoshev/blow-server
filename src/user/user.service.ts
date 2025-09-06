@@ -766,6 +766,7 @@ export class UserService {
         type: TransactionType.DEBIT,
         sum: amountNum,
         description: `Покупка контакта (${contactType}) пользователя за ${amountNum} ₽.`,
+        status: TransactionStatus.PAID,
       });
 
       const transactionSell = new this.transactionModel({
