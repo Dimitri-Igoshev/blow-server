@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 
 @Controller('transaction')
@@ -16,7 +16,7 @@ export class TransactionController {
   }
 
   @Patch(':id')
-  updateTransaction(id: string) {
-    return this.transactionService.updateTransaction(id);
+  updateTransaction(id: string, @Body() data: any) {
+    return this.transactionService.updateTransaction(id, data);
   }
 }
