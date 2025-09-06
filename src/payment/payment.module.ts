@@ -10,9 +10,13 @@ import {
 import { User, UserSchema } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { FileService } from 'src/file/file.service';
-import { TopUp, TopUpSchema } from 'src/top-up/entities/top-up.entity'
-import { Session, SessionSchema } from 'src/session/entities/session.entity'
-import { Guest, GuestSchema } from 'src/guest/entities/guest.entity'
+import { TopUp, TopUpSchema } from 'src/top-up/entities/top-up.entity';
+import { Session, SessionSchema } from 'src/session/entities/session.entity';
+import { Guest, GuestSchema } from 'src/guest/entities/guest.entity';
+import {
+  Withdrawal,
+  WithdrawalSchema,
+} from 'src/withdrawal/entities/withdrawal.entity';
 
 @Module({
   imports: [
@@ -22,6 +26,7 @@ import { Guest, GuestSchema } from 'src/guest/entities/guest.entity'
       { name: TopUp.name, schema: TopUpSchema },
       { name: Session.name, schema: SessionSchema },
       { name: Guest.name, schema: GuestSchema },
+      { name: Withdrawal.name, schema: WithdrawalSchema },
     ]),
     HttpModule,
   ],

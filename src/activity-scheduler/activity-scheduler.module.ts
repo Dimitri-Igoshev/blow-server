@@ -12,7 +12,11 @@ import {
 import { Guest, GuestSchema } from 'src/guest/entities/guest.entity';
 import { Session } from 'inspector/promises';
 import { SessionSchema } from 'src/session/entities/session.entity';
-import { FileService } from 'src/file/file.service'
+import { FileService } from 'src/file/file.service';
+import {
+  Withdrawal,
+  WithdrawalSchema,
+} from 'src/withdrawal/entities/withdrawal.entity';
 
 @Module({
   imports: [
@@ -23,6 +27,7 @@ import { FileService } from 'src/file/file.service'
       { name: Transaction.name, schema: TransactionSchema },
       { name: Guest.name, schema: GuestSchema },
       { name: Session.name, schema: SessionSchema },
+      { name: Withdrawal.name, schema: WithdrawalSchema },
     ]),
   ],
   providers: [ActivitySchedulerService, FileService, UserService],

@@ -45,4 +45,10 @@ export class TransactionService {
   getTransactionById(id: string) {
     return this.transactionModel.findOne({ trackingId: id }).exec();
   }
+
+  updateTransaction(id: string, data: any) {
+    return this.transactionModel
+      .findOneAndUpdate({ _id: id }, { data }, { new: true })
+      .exec();
+  }
 }

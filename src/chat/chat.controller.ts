@@ -21,6 +21,11 @@ export class ChatController {
     return this.chatService.createMessage(data);
   }
 
+  @Post('system')
+  createSystemMessage(@Body() data: any) {
+    return this.chatService.createSystemMessage(data);
+  }
+
   @Post('chat')
   createChat(@Body() data: any) {
     return this.chatService.findOrCreateChat(data);

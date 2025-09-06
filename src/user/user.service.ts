@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserRole, UserStatus } from './entities/user.entity';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { MFile } from 'src/file/mfile.class';
 import { FileService } from 'src/file/file.service';
@@ -20,6 +20,7 @@ import { Session } from 'src/session/entities/session.entity';
 import { Guest } from 'src/guest/entities/guest.entity';
 import { format } from 'date-fns';
 import { base62FromObjectId, buildBaseSlug } from './slug.util';
+import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -33,6 +34,7 @@ export class UserService {
     @InjectModel(Transaction.name) private transactionModel: Model<Transaction>,
     @InjectModel(Session.name) private sessionModel: Model<Session>,
     @InjectModel(Guest.name) private guestModel: Model<Guest>,
+    @InjectModel(Withdrawal.name) private withdrawalModel: Model<Withdrawal>,
     private readonly mailerService: MailerService,
     private readonly fileService: FileService,
   ) {}
@@ -335,6 +337,7 @@ export class UserService {
     }
 
     const users = await this.userModel.aggregate(basePipeline).exec();
+    console.log(users.length);
     return users;
   }
 
@@ -733,6 +736,203 @@ export class UserService {
     }
 
     return currentDate;
+  }
+
+  async buyContact({
+    seller,
+    buyer,
+    contactType,
+    amount,
+    contact,
+  }: {
+    seller: string;
+    buyer: string;
+    contactType: string;
+    amount: number | string;
+    contact: any; // опиши тип объекта контакта
+  }) {
+    const amountNum = Number(amount) || 0;
+    if (amountNum < 0) {
+      throw new HttpException('Amount invalid', HttpStatus.BAD_REQUEST);
+    }
+
+    // создаём транзакции только если есть сумма
+    let newTransactionBuy: any | undefined;
+    let newTransactionSell: any | undefined;
+
+    if (amountNum > 0) {
+      const transactionBuy = new this.transactionModel({
+        userId: buyer.toString(),
+        type: TransactionType.DEBIT,
+        sum: amountNum,
+        description: `Покупка контакта (${contactType}) пользователя за ${amountNum} ₽.`,
+      });
+
+      const transactionSell = new this.transactionModel({
+        userId: seller.toString(),
+        type: TransactionType.CREDIT,
+        sum: amountNum / 2,
+        description: `Продажа контакта (${contactType}) пользователю за ${amountNum / 2} ₽.`,
+      });
+
+      [newTransactionBuy, newTransactionSell] = await Promise.all([
+        transactionBuy.save(),
+        transactionSell.save(),
+      ]);
+
+      if (!newTransactionBuy || !newTransactionSell) {
+        throw new HttpException('Error', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // один $push — добавляем транзакцию продавцу в начало
+      await this.userModel
+        .findOneAndUpdate(
+          { _id: seller },
+          {
+            ...(amountNum > 0 ? { $inc: { balance: +amountNum / 2 } } : {}),
+            $push: {
+              transactions: { $each: [newTransactionSell._id], $position: 0 },
+            },
+          },
+          { new: true },
+        )
+        .exec();
+    }
+
+    const user = await this.userModel.findOne({ _id: buyer }).exec();
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    // формируем update динамически, чтобы не было дублирующихся ключей
+    const pushOps: any = {
+      purchasedContacts: { $each: [contact], $position: 0 }, // кладём объект контакта
+    };
+    if (newTransactionBuy?._id) {
+      pushOps.transactions = { $each: [newTransactionBuy._id], $position: 0 };
+    }
+
+    await this.userModel
+      .findOneAndUpdate(
+        { _id: buyer },
+        {
+          // лучше инкремент, чем пересчитывать от user.balance
+          ...(amountNum > 0 ? { $inc: { balance: -amountNum } } : {}),
+          $push: pushOps,
+        },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async withdrawal(data: any) {
+    const session = await this.userModel.startSession();
+    session.startTransaction();
+
+    try {
+      // Валидация данных
+      if (data.amount <= 0) {
+        throw new HttpException(
+          'Сумма должна быть положительной',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(data.user)) {
+        throw new HttpException(
+          'Неверный ID пользователя',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Проверяем достаточно ли средств у пользователя
+      const user = await this.userModel.findById(data.user).session(session);
+      if (!user) {
+        throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
+      }
+
+      if (user.balance < data.amount) {
+        throw new HttpException('Недостаточно средств', HttpStatus.BAD_REQUEST);
+      }
+
+      // Создаем транзакцию
+      const transaction = new this.transactionModel({
+        userId: data.user,
+        type: TransactionType.DEBIT,
+        sum: data.amount,
+        description: `Вывод средств со счета`,
+        status: TransactionStatus.PENDING,
+      });
+
+      const savedTransaction = await transaction.save({ session });
+
+      // Создаем запрос на вывод
+      const withdrawal = await this.withdrawalModel.create(
+        [
+          {
+            ...data,
+            transactionId: savedTransaction._id,
+          },
+        ],
+        { session },
+      );
+
+      // Обновляем баланс пользователя
+      const updatedUser = await this.userModel
+        .findOneAndUpdate(
+          { _id: data.user, balance: { $gte: data.amount } }, // Atomic update с проверкой
+          {
+            $inc: { balance: -data.amount },
+            $push: {
+              transactions: {
+                $each: [savedTransaction._id],
+                $position: 0,
+              },
+            },
+          },
+          { new: true, session },
+        )
+        .exec();
+
+      if (!updatedUser) {
+        throw new HttpException(
+          'Ошибка при обновлении баланса',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      // Обновляем статусы на успешные
+      await this.transactionModel.findByIdAndUpdate(
+        savedTransaction._id,
+        { status: 'pending' },
+        { session },
+      );
+
+      await this.withdrawalModel.findByIdAndUpdate(
+        withdrawal[0]._id,
+        { status: 'new' },
+        { session },
+      );
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return {
+        user: updatedUser,
+        transaction: savedTransaction,
+        withdrawal: withdrawal[0],
+      };
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        `Ошибка при выводе средств: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async buyService({

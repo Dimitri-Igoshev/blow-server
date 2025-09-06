@@ -26,4 +26,7 @@ export class CreateUserDto {
   updatedAt?: any;
   blockList?: string[];
   isFake?: boolean;
+  referers?: any[];
+  contacts?: any;
+  purchasedContacts?: any[];
 }

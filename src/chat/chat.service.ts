@@ -189,6 +189,53 @@ export class ChatService {
     return savedMessage;
   }
 
+  async createSystemMessage(data: any) {
+    const message = new this.messageModel({
+      chat: data?.chat,
+      type: 'system',
+      recipient: data?.recipient,
+      text: data?.text,
+    });
+
+    const savedMessage = await message.save();
+
+    await this.chatModel
+      .findByIdAndUpdate(
+        data?.chat,
+        {
+          $push: {
+            messages: { $each: [savedMessage._id], $position: 0 },
+          },
+          // опционально: поддержка «последнего сообщения»/времени
+          // $set: { lastMessageAt: savedMessage.createdAt, lastMessage: savedMessage._id },
+        },
+        { new: true },
+      )
+      .exec();
+
+    const recipient = await this.userModel
+      .findOne({ _id: data.recipient, status: UserStatus.ACTIVE })
+      .select('-password')
+      .exec();
+
+    if (!recipient) {
+      throw new Error('User not found');
+    }
+
+    this.sendNewMessageNotification({
+      recipient: {
+        email: recipient?.email || '',
+        firstName: recipient?.firstName || 'пользователь Blow',
+      },
+      sender: {
+        firstName: 'BLOW - системное сообщение',
+      },
+      messageText: savedMessage?.text || '',
+      chatLink: `https://blow.ru`,
+    });
+    return savedMessage;
+  }
+
   async getChats(userId): Promise<any[]> {
     return await this.chatModel
       .find({ $or: [{ sender: userId }, { recipient: userId }] })

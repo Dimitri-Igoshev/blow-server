@@ -151,6 +151,18 @@ export class UserController {
   }
 
   @UseGuards(JwtGuard)
+  @Post('buy/contact')
+  buyContact(@Body() data: any) {
+    return this.userService.buyContact(data);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('withdawal/money')
+  withdrawal(@Body() data: any) {
+    return this.userService.withdrawal(data);
+  }
+
+  @UseGuards(JwtGuard)
   @Post('buy/services-kit')
   buyServicesKit(@Body() data: BuyServiceDto) {
     return this.userService.buyServicesKit(data);

@@ -18,4 +18,7 @@ export class EditMessageDto {
 
   @IsOptional()
   replyTo?: string | null;
+
+  @IsOptional()
+  type?: string;
 }

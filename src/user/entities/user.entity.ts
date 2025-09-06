@@ -52,6 +52,25 @@ export enum SlugStatus {
   Rejected = 'rejected',
 }
 
+export interface Referer {
+  type: string;
+  user: User;
+  percent: number;
+}
+
+export interface UserContacts {
+  phone?: string;
+  telegram?: string;
+  whatsapp?: string;
+}
+
+export interface PurchasedContacts {
+  user: string;
+  phone?: string;
+  telegram?: string;
+  whatsapp?: string;
+}
+
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, unique: true })
@@ -126,12 +145,6 @@ export class User {
   @Prop()
   confirmToken: string;
 
-  // @Prop({ default: Date.now() })
-  // createdAt: Date;
-
-  // @Prop({ default: Date.now() })
-  // updatedAt: Date;
-
   @Prop({ default: Date.now() })
   raisedAt: Date;
 
@@ -191,6 +204,15 @@ export class User {
 
   @Prop({ default: false })
   isFake?: boolean;
+
+  @Prop()
+  referers?: Referer[];
+
+  @Prop()
+  contacts?: UserContacts[];
+
+  @Prop()
+  purchasedContacts?: PurchasedContacts[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

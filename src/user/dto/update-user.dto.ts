@@ -32,4 +32,7 @@ export class UpdateUserDto {
   lastMailing?: string;
   blockList?: string[];
   isFake?: boolean;
+  referers?: any[];
+  contacts?: any;
+  purchasedContacts?: any[];
 }
