@@ -196,7 +196,7 @@ export class ChatService {
       type: 'system',
       recipient: data?.recipient,
       text: data?.text,
-      unreadBy: [data?.recipient],
+      unreadBy: data?.unreadBy || [data?.recipient],
     });
 
     const savedMessage = await message.save();
