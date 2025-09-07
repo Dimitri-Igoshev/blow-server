@@ -21,4 +21,7 @@ export class EditMessageDto {
 
   @IsOptional()
   type?: string;
+
+  @IsOptional()
+  unreadBy?: string[];
 }

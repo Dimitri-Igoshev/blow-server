@@ -52,6 +52,9 @@ export class Message {
     default: false,
   })
   isReaded: boolean;
+
+  @Prop()
+  unreadBy: string[];
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

@@ -39,7 +39,7 @@ export class WithdrawalService {
 
   async update(id: string, data: UpdateWithdrawalDto) {
     return await this.withdrawalModel
-      .findOneAndUpdate({ _id: id }, { data }, { new: true })
+      .findOneAndUpdate({ _id: id }, { status: data.status }, { new: true })
       .exec();
   }
 }

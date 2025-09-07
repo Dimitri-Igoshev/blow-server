@@ -138,6 +138,7 @@ export class ChatService {
       text: data?.text ?? '',
       fileUrl: data?.fileUrl ?? '',
       replyTo: data?.replyTo ?? null,
+      unreadBy: [data.recipient],
     });
 
     const savedMessage = await message.save(); // ВАЖНО: await
@@ -195,6 +196,7 @@ export class ChatService {
       type: 'system',
       recipient: data?.recipient,
       text: data?.text,
+      unreadBy: [data?.recipient],
     });
 
     const savedMessage = await message.save();

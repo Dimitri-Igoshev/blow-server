@@ -42,13 +42,17 @@ export class TransactionService {
       .exec();
   }
 
+  getTransaction(id: string) {
+    return this.transactionModel.findOne({ _id: id }).exec();
+  }
+
   getTransactionById(id: string) {
     return this.transactionModel.findOne({ trackingId: id }).exec();
   }
 
   updateTransaction(id: string, data: any) {
     return this.transactionModel
-      .findOneAndUpdate({ _id: id }, { data }, { new: true })
+      .findOneAndUpdate({ _id: id }, { status: data.status }, { new: true })
       .exec();
   }
 }

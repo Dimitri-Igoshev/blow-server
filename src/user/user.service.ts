@@ -774,6 +774,7 @@ export class UserService {
         type: TransactionType.CREDIT,
         sum: amountNum / 2,
         description: `Продажа контакта (${contactType}) пользователю за ${amountNum / 2} ₽.`,
+        status: TransactionStatus.PENDING,
       });
 
       [newTransactionBuy, newTransactionSell] = await Promise.all([

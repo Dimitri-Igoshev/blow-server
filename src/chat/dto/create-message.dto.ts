@@ -23,4 +23,7 @@ export class CreateMessageDto {
 
   @IsOptional()
   type?: string;
+
+  @IsOptional()
+  unreadBy?: string[];
 }

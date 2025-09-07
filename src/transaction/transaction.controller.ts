@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 
 @Controller('transaction')
@@ -10,13 +10,18 @@ export class TransactionController {
     return this.transactionService.getTransactions(query);
   }
 
+  @Get(':id')
+  getTransaction(@Param('id') id: string) {
+    return this.transactionService.getTransaction(id);
+  }
+
   @Get('tracking/:id')
   getTrackingInfo(id: string) {
     return this.transactionService.getTransactionById(id);
   }
 
   @Patch(':id')
-  updateTransaction(id: string, @Body() data: any) {
+  updateTransaction(@Param('id') id: string, @Body() data: any) {
     return this.transactionService.updateTransaction(id, data);
   }
 }
