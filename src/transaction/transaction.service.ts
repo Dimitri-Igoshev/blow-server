@@ -52,7 +52,7 @@ export class TransactionService {
 
   updateTransaction(id: string, data: any) {
     return this.transactionModel
-      .findOneAndUpdate({ _id: id }, { status: data.status }, { new: true })
+      .findOneAndUpdate({ _id: id }, { data }, { new: true })
       .exec();
   }
 }
