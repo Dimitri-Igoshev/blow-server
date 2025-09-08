@@ -17,6 +17,7 @@ import {
   Withdrawal,
   WithdrawalSchema,
 } from 'src/withdrawal/entities/withdrawal.entity';
+import { Sale, SaleSchema } from 'src/sale/entities/sale.entity'
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import {
       { name: Session.name, schema: SessionSchema },
       { name: Guest.name, schema: GuestSchema },
       { name: Withdrawal.name, schema: WithdrawalSchema },
+      { name: Sale.name, schema: SaleSchema },
     ]),
     JwtModule.register({
       global: true,

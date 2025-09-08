@@ -25,6 +25,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ActivitySchedulerService } from './activity-scheduler/activity-scheduler.service'
 import { UserService } from './user/user.service'
 import { WithdrawalModule } from './withdrawal/withdrawal.module';
+import { SaleModule } from './sale/sale.module';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { WithdrawalModule } from './withdrawal/withdrawal.module';
     ActivitySchedulerModule,
     ScheduleModule.forRoot(),
     WithdrawalModule,
+    SaleModule,
   ],
 })
 export class AppModule {}

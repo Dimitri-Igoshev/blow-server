@@ -21,6 +21,7 @@ import { Guest } from 'src/guest/entities/guest.entity';
 import { format } from 'date-fns';
 import { base62FromObjectId, buildBaseSlug } from './slug.util';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
+import { Sale } from 'src/sale/entities/sale.entity';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -35,6 +36,7 @@ export class UserService {
     @InjectModel(Session.name) private sessionModel: Model<Session>,
     @InjectModel(Guest.name) private guestModel: Model<Guest>,
     @InjectModel(Withdrawal.name) private withdrawalModel: Model<Withdrawal>,
+    @InjectModel(Sale.name) private saleModel: Model<Sale>,
     private readonly mailerService: MailerService,
     private readonly fileService: FileService,
   ) {}
@@ -760,7 +762,21 @@ export class UserService {
     let newTransactionBuy: any | undefined;
     let newTransactionSell: any | undefined;
 
+    const sellerUser = await this.findOne(seller);
+    const buyerUser = await this.findOne(buyer);
+
     if (amountNum > 0) {
+      console.log(contact);
+      const sale = new this.saleModel({
+        seller,
+        buyer,
+        value: contact?.phone || contact?.telegram || contact?.whatsapp,
+        amount,
+        description: `Продажа контакта (${contactType} - ${contact?.phone || contact?.telegram || contact?.whatsapp}) пользователя ${sellerUser?.firstName} (${sellerUser?.email}) за ${amountNum} ₽. Покупатель - ${buyerUser?.firstName} (${buyerUser?.email}).`,
+      });
+      
+      await sale.save();
+
       const transactionBuy = new this.transactionModel({
         userId: buyer.toString(),
         type: TransactionType.DEBIT,

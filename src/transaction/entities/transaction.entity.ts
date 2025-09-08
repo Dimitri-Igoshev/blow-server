@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+import type { Sale } from 'src/sale/entities/sale.entity'
 import { User } from 'src/user/entities/user.entity';
 
 export type TransactionDocument = HydratedDocument<Transaction>;
@@ -59,6 +60,13 @@ export class Transaction {
 
   @Prop({ type: String })
   trackingId: string;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Sale',
+    default: null,
+  })
+  sale: Sale;
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);

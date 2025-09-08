@@ -16,6 +16,7 @@ import {
   WithdrawalSchema,
 } from 'src/withdrawal/entities/withdrawal.entity';
 import { WithdrawalService } from 'src/withdrawal/withdrawal.service';
+import { Sale, SaleSchema } from 'src/sale/entities/sale.entity'
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { WithdrawalService } from 'src/withdrawal/withdrawal.service';
       { name: Session.name, schema: SessionSchema },
       { name: Guest.name, schema: GuestSchema },
       { name: Withdrawal.name, schema: WithdrawalSchema },
+      { name: Sale.name, schema: SaleSchema },
     ]),
   ],
   controllers: [UserController],
