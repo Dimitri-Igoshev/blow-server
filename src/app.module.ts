@@ -22,10 +22,10 @@ import { GuestModule } from './guest/guest.module';
 import { EmailingModule } from './emailing/emailing.module';
 import { ActivitySchedulerModule } from './activity-scheduler/activity-scheduler.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ActivitySchedulerService } from './activity-scheduler/activity-scheduler.service'
-import { UserService } from './user/user.service'
 import { WithdrawalModule } from './withdrawal/withdrawal.module';
 import { SaleModule } from './sale/sale.module';
+import { YoomoneyModule } from './yoomoney/yoomoney.module';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
@@ -101,6 +101,8 @@ import { SaleModule } from './sale/sale.module';
     ScheduleModule.forRoot(),
     WithdrawalModule,
     SaleModule,
+    YoomoneyModule,
+    WalletModule,
   ],
 })
 export class AppModule {}
