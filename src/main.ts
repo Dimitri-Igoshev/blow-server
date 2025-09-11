@@ -11,9 +11,6 @@ async function bootstrap() {
 
   app.set('trust proxy', true); // теперь TypeScript не ругается
 
-  const port = Number(process.env.PORT) || 8080;
-  await app.listen(port, '0.0.0.0');
-
-  // await app.listen(process.env.PORT ?? 4000);
+  await app.listen(process.env.PORT ?? 4000);
 }
 bootstrap();
