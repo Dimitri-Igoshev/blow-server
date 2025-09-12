@@ -17,7 +17,7 @@ export class PaymentController {
 
   @Post('top-up')
   topUpAccount(
-    @Body() data: { token: string; amount: number; userId: string },
+    @Body() data: { token?: string; amount: number; userId: string },
   ) {
     return this.paymentService.topUpAccount(data);
   }

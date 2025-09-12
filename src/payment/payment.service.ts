@@ -116,12 +116,16 @@ export class PaymentService {
       .exec();
   }
 
-  async topUpAccount(data: { token: string; amount: number; userId: string }) {
-    const decoded = await this.jwtService.verifyAsync(data.token, {
-      secret: SECRET,
-    });
+  async topUpAccount(data: { token?: string; amount: number; userId: string }) {
+    let decoded: unknown;
 
-    if (!decoded)
+    if (data?.token) {
+      decoded = await this.jwtService.verifyAsync(data.token, {
+        secret: SECRET,
+      });
+    }
+
+    if (data?.token && !decoded)
       throw new HttpException('Token not valid', HttpStatus.BAD_REQUEST);
 
     const user = await this.userService.findOne(data?.userId || '');
