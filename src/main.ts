@@ -9,7 +9,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // app.set('trust proxy', true); // теперь TypeScript не ругается
+  app.set('trust proxy', true); // теперь TypeScript не ругается
 
   await app.listen(process.env.PORT ?? 4000);
 }
