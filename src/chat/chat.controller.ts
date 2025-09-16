@@ -79,4 +79,9 @@ export class ChatController {
   getFakeMessages(@Query() query: Record<string, string>) {
     return this.chatService.getFakeMessages(query);
   }
+
+  @Get('fake/chats')
+  getFakeChats(@Query() query: Record<string, string>) {
+    return this.chatService.getFakeChats(query);
+  }
 }

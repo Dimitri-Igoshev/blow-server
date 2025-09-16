@@ -519,4 +519,364 @@ export class ChatService {
       ])
       .exec();
   }
+
+  getFakeChats(rawQuery: Record<string, string>) {
+    const { search, chat, limit } = rawQuery;
+
+    const chatsLimit = Number.parseInt(limit ?? '', 10);
+    const matchChat: Record<string, any> = {};
+
+    // Фильтр по _id чата
+    if (chat) {
+      const chatId = this.toObjectId(chat);
+      if (chatId) matchChat._id = chatId;
+      else throw new BadRequestException('Invalid chat id');
+    }
+
+    // Опциональные фильтры по sender/recipient
+    (['sender', 'recipient'] as const).forEach((key) => {
+      const val = rawQuery[key];
+      if (val === undefined) return;
+      const id = this.toObjectId(val);
+      if (id) matchChat[key] = id;
+      else throw new BadRequestException(`Invalid ${key} id`);
+    });
+
+    const pipeline: any[] = [
+      { $match: matchChat },
+
+      // populate recipient
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'recipient',
+          foreignField: '_id',
+          as: 'recipientData',
+        },
+      },
+      {
+        $unwind: { path: '$recipientData', preserveNullAndEmptyArrays: false },
+      },
+
+      // populate sender
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'sender',
+          foreignField: '_id',
+          as: 'senderData',
+        },
+      },
+      { $unwind: { path: '$senderData', preserveNullAndEmptyArrays: false } },
+
+      // Хватаем чаты, где один фейк, второй реал
+      {
+        $match: {
+          $and: [
+            {
+              $or: [
+                { 'recipientData.isFake': true },
+                { 'senderData.isFake': true },
+              ],
+            },
+            {
+              $or: [
+                { 'recipientData.isFake': false },
+                { 'senderData.isFake': false },
+              ],
+            },
+          ],
+        },
+      },
+
+      // Вычисляем fakeUserId и realUserId
+      {
+        $addFields: {
+          fakeUserId: {
+            $cond: [
+              { $eq: ['$recipientData.isFake', true] },
+              '$recipient',
+              '$sender',
+            ],
+          },
+          realUserId: {
+            $cond: [
+              { $eq: ['$recipientData.isFake', true] },
+              '$sender',
+              '$recipient',
+            ],
+          },
+        },
+      },
+
+      // Если есть search — чаты, где есть сообщения с маской
+      ...(search
+        ? [
+            {
+              $lookup: {
+                from: 'messages',
+                let: { chatId: '$_id' },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: { $eq: ['$chat', '$$chatId'] },
+                      text: { $regex: search, $options: 'i' },
+                    },
+                  },
+                  { $limit: 1 },
+                ],
+                as: 'searchMessages',
+              },
+            },
+            { $match: { 'searchMessages.0': { $exists: true } } },
+          ]
+        : []),
+
+      // Последнее сообщение от реального
+      {
+        $lookup: {
+          from: 'messages',
+          let: { chatId: '$_id', realId: '$realUserId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$chat', '$$chatId'] },
+                    { $eq: ['$sender', '$$realId'] },
+                  ],
+                },
+              },
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+            // populate sender
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'sender',
+                foreignField: '_id',
+                as: 'senderData',
+              },
+            },
+            {
+              $unwind: {
+                path: '$senderData',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            // populate replyTo (+ его sender)
+            {
+              $lookup: {
+                from: 'messages',
+                localField: 'replyTo',
+                foreignField: '_id',
+                as: 'replyToData',
+              },
+            },
+            {
+              $unwind: {
+                path: '$replyToData',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'replyToData.sender',
+                foreignField: '_id',
+                as: 'replyToSenderData',
+              },
+            },
+            {
+              $unwind: {
+                path: '$replyToSenderData',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                text: 1,
+                createdAt: 1,
+                fileUrl: 1,
+                isReaded: 1,
+                unreadBy: 1,
+                chat: 1,
+                sender: '$senderData',
+                replyTo: {
+                  $cond: {
+                    if: { $eq: ['$replyToData', null] },
+                    then: null,
+                    else: {
+                      _id: '$replyToData._id',
+                      text: '$replyToData.text',
+                      createdAt: '$replyToData.createdAt',
+                      sender: '$replyToSenderData',
+                    },
+                  },
+                },
+              },
+            },
+          ],
+          as: 'lastRealMessageArr',
+        },
+      },
+      {
+        $addFields: {
+          lastRealMessage: { $arrayElemAt: ['$lastRealMessageArr', 0] },
+        },
+      },
+
+      // Обязательно должно быть хотя бы одно сообщение от реального
+      { $match: { lastRealMessage: { $ne: null } } },
+
+      // Последнее сообщение от фейка
+      {
+        $lookup: {
+          from: 'messages',
+          let: { chatId: '$_id', fakeId: '$fakeUserId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$chat', '$$chatId'] },
+                    { $eq: ['$sender', '$$fakeId'] },
+                  ],
+                },
+              },
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+            // populate sender
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'sender',
+                foreignField: '_id',
+                as: 'senderData',
+              },
+            },
+            {
+              $unwind: {
+                path: '$senderData',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            // populate replyTo (+ его sender)
+            {
+              $lookup: {
+                from: 'messages',
+                localField: 'replyTo',
+                foreignField: '_id',
+                as: 'replyToData',
+              },
+            },
+            {
+              $unwind: {
+                path: '$replyToData',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'replyToData.sender',
+                foreignField: '_id',
+                as: 'replyToSenderData',
+              },
+            },
+            {
+              $unwind: {
+                path: '$replyToSenderData',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                text: 1,
+                createdAt: 1,
+                fileUrl: 1,
+                isReaded: 1,
+                unreadBy: 1,
+                chat: 1,
+                sender: '$senderData',
+                replyTo: {
+                  $cond: {
+                    if: { $eq: ['$replyToData', null] },
+                    then: null,
+                    else: {
+                      _id: '$replyToData._id',
+                      text: '$replyToData.text',
+                      createdAt: '$replyToData.createdAt',
+                      sender: '$replyToSenderData',
+                    },
+                  },
+                },
+              },
+            },
+          ],
+          as: 'lastFakeMessageArr',
+        },
+      },
+      {
+        $addFields: {
+          lastFakeMessage: { $arrayElemAt: ['$lastFakeMessageArr', 0] },
+        },
+      },
+
+      // Собираем messages: всегда real + (fake, если свежее real)
+      {
+        $addFields: {
+          messages: {
+            $let: {
+              vars: { real: '$lastRealMessage', fake: '$lastFakeMessage' },
+              in: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ['$$fake', null] },
+                      { $gt: ['$$fake.createdAt', '$$real.createdAt'] },
+                    ],
+                  },
+                  ['$$real', '$$fake'],
+                  ['$$real'],
+                ],
+              },
+            },
+          },
+        },
+      },
+
+      // Последняя активность
+      {
+        $addFields: {
+          lastActivityAt: {
+            $max: [
+              '$lastRealMessage.createdAt',
+              { $ifNull: ['$lastFakeMessage.createdAt', new Date(0)] },
+            ],
+          },
+        },
+      },
+
+      { $sort: { lastActivityAt: -1, _id: -1 } },
+      { $limit: Number.isNaN(chatsLimit) ? 10 : chatsLimit },
+
+      // Финальная форма
+      {
+        $project: {
+          _id: 1,
+          sender: '$senderData',
+          recipient: '$recipientData',
+          messages: 1,
+          lastActivityAt: 1,
+        },
+      },
+    ];
+
+    return this.chatModel.aggregate(pipeline).exec();
+  }
 }
