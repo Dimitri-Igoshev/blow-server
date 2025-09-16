@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, isValidObjectId, Types } from 'mongoose';
 import { Message } from './entities/message.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { format } from 'date-fns';
 import { UserStatus } from 'src/user/entities/user.entity';
+import { BadRequestException } from '@nestjs/common';
 
 interface MessageNotificationParams {
   recipient: any;
@@ -380,5 +381,142 @@ export class ChatService {
     }
 
     return chat;
+  }
+
+  // Fake services
+
+  private toObjectId(val?: unknown): Types.ObjectId | undefined {
+    if (typeof val === 'string' && isValidObjectId(val)) {
+      return new Types.ObjectId(val);
+    }
+    return undefined;
+  }
+
+  getFakeMessages(rawQuery: Record<string, string>) {
+    const { search, chat, limit } = rawQuery;
+
+    const limitValue = Number.parseInt(limit ?? '', 10);
+    const matchStage: Record<string, any> = {};
+
+    // Текстовый поиск
+    if (search) {
+      matchStage.text = { $regex: search, $options: 'i' };
+    }
+
+    // chat — строго валидируем
+    if (chat) {
+      const chatId = this.toObjectId(chat);
+      if (chatId) {
+        matchStage.chat = chatId;
+      } else {
+        // ЛИБО игнорировать
+        // console.warn('Invalid chat ID:', chat);
+        // ЛИБО вернуть 400 — так проще отлавливать ошибки клиента
+        throw new BadRequestException('Invalid chat id');
+      }
+    }
+
+    // Прочие фильтры
+    Object.keys(rawQuery).forEach((key) => {
+      if (['chat', 'limit', 'search'].includes(key)) return;
+      const val = rawQuery[key];
+
+      // Поля-идшники
+      if (['sender', 'recipient', 'replyTo'].includes(key)) {
+        const id = this.toObjectId(val);
+        if (id) {
+          matchStage[key] = id;
+        } else if (val) {
+          // либо игнор, либо 400 — выбери единую стратегию
+          throw new BadRequestException(`Invalid ${key} id`);
+        }
+        return;
+      }
+
+      // Остальное — как есть
+      if (val !== undefined) {
+        matchStage[key] = val;
+      }
+    });
+
+    return this.messageModel
+      .aggregate([
+        { $match: matchStage },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'recipient',
+            foreignField: '_id',
+            as: 'recipientData',
+          },
+        },
+        {
+          $unwind: {
+            path: '$recipientData',
+            preserveNullAndEmptyArrays: false,
+          },
+        },
+        { $match: { 'recipientData.isFake': true } },
+        { $sort: { createdAt: -1 } },
+        { $limit: Number.isNaN(limitValue) ? 10 : limitValue },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'sender',
+            foreignField: '_id',
+            as: 'senderData',
+          },
+        },
+        { $unwind: { path: '$senderData', preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: 'messages',
+            localField: 'replyTo',
+            foreignField: '_id',
+            as: 'replyToData',
+          },
+        },
+        { $unwind: { path: '$replyToData', preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'replyToData.sender',
+            foreignField: '_id',
+            as: 'replyToSenderData',
+          },
+        },
+        {
+          $unwind: {
+            path: '$replyToSenderData',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            text: 1,
+            createdAt: 1,
+            fileUrl: 1,
+            isReaded: 1,
+            unreadBy: 1,
+            chat: 1,
+            sender: '$senderData',
+            recipient: '$recipientData',
+            replyTo: {
+              $cond: {
+                if: { $eq: ['$replyToData', null] },
+                then: null,
+                else: {
+                  _id: '$replyToData._id',
+                  text: '$replyToData.text',
+                  createdAt: '$replyToData.createdAt',
+                  sender: '$replyToSenderData',
+                },
+              },
+            },
+          },
+        },
+      ])
+      .exec();
   }
 }

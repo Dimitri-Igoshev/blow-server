@@ -73,4 +73,10 @@ export class ChatController {
   removeUserChats(@Param('id') id: string) {
     return this.chatService.deleteUserChats(id);
   }
+
+  // Fake endpoints
+  @Get('fake/all-messages')
+  getFakeMessages(@Query() query: Record<string, string>) {
+    return this.chatService.getFakeMessages(query);
+  }
 }

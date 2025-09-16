@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { MailModule } from './mail/mail.module';
@@ -88,13 +88,13 @@ import { WalletModule } from './wallet/wallet.module';
         from: '"No Reply" <no-reply@blow.ru>',
       },
       preview: false,
-      // template: {
-      //   dir: process.cwd() + '/template/',
-      //   adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
-      //   options: {
-      //     strict: true,
-      //   },
-      // },
+      template: {
+        dir: process.cwd() + '/template/',
+        adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
+        options: {
+          strict: true,
+        },
+      },
     }),
     AuthModule,
     MailModule,

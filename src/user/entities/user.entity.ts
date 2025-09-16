@@ -130,7 +130,7 @@ export class User {
   @Prop({ type: String, enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
-  @Prop({ type: String, enum: UserStatus, default: UserStatus.NEW })
+  @Prop({ type: String, enum: UserStatus, default: UserStatus.ACTIVE })
   status: UserStatus;
 
   @Prop()
