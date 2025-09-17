@@ -176,14 +176,26 @@ export class UserService {
       period: ServicePeriod.DAY,
     });
 
+    console.log(1, file);
+
     if (!file) return savedUser;
 
     const uploaded = await this.fileService.saveFile([file]);
 
+    console.log(2, uploaded);
+
     if (uploaded && uploaded[0]?.url) {
       return this.userModel.findOneAndUpdate(
         { _id: savedUser._id },
-        { photoUrl: uploaded[0].url },
+        {
+          photos: [
+            {
+              url: uploaded[0].url,
+              main: true,
+              rank: 1,
+            },
+          ],
+        },
         { new: true },
       );
     } else {
@@ -1216,8 +1228,19 @@ export class UserService {
 
   private async getFile(item: any) {
     const photoUrl = `https://ruamo.ru${item?.mainPhoto}`;
-    const file = await fetchAsMulterFile(photoUrl);
-    // const avatarInfo = await this.fileService.fromUrl(file);
+    const fileData = await fetchAsMulterFile(photoUrl);
+    // const avatarInfo = await this.fileService.fromUrl(fileData);
+
+    // console.log(fileData, avatarInfo)
+
+    //     this.originalname = file.originalname;
+    // this.buffer = file.buffer;
+    // this.mimetype = file?.mimetype;
+    const file = {
+      originalname: fileData.originalname,
+      buffer: fileData.buffer,
+      mimetype: fileData.mimetype,
+    };
 
     const data: CreateUserDto = {
       isFake: true,
@@ -1244,9 +1267,9 @@ export class UserService {
 
   parseUsers(data: any[]) {
     data.forEach((item: any) => {
-        if (item?.mainPhoto) {
-          this.getFile(item);
-        }
+      if (item?.mainPhoto) {
+        this.getFile(item);
+      }
     });
   }
 }
