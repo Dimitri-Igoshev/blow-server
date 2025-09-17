@@ -178,4 +178,14 @@ export class UserController {
   getVisitsToGasts() {
     return this.userService.visitsToGasts();
   }
+
+  @Get('fake/all')
+  getAllFakes(@Query() query: Record<string, string>) {
+    return this.userService.getAllFakes(query);
+  }
+
+  @Post('fake/parse')
+  parseUsers(@Body() data: any[]) {
+    return this.userService.parseUsers(data);
+  }
 }

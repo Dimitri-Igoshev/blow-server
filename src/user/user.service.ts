@@ -22,6 +22,9 @@ import { format } from 'date-fns';
 import { base62FromObjectId, buildBaseSlug } from './slug.util';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 import { Sale } from 'src/sale/entities/sale.entity';
+import { fetchAsMulterFile } from 'src/common/utils/fetch-as-multer-file';
+import { makeRandomEmail } from 'src/common/utils/make-random-email';
+import { calcAge } from 'src/common/utils/get-age';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -162,8 +165,6 @@ export class UserService {
       password: newPassword,
     });
 
-    console.log('create', data.password, newPassword);
-
     const savedUser = await newUser.save();
     await this.ensureSlugAndShortId(savedUser);
 
@@ -188,6 +189,21 @@ export class UserService {
     } else {
       return savedUser;
     }
+  }
+
+  getAllFakes(query: Record<string, string>) {
+    const { search, limit } = query;
+
+    const filter: Record<string, any> = { status: UserStatus.ACTIVE };
+    if (search) filter.label = { $regex: search, $options: 'i' };
+
+    const limitValue = Number.parseInt(limit ?? '', 10);
+
+    return this.userModel
+      .find(filter)
+      .sort({ order: 1, label: 1 })
+      .limit(Number.isNaN(limitValue) ? 10 : limitValue)
+      .exec();
   }
 
   async findAll(query: Record<string, string>) {
@@ -774,7 +790,7 @@ export class UserService {
         amount,
         description: `Продажа контакта (${contactType} - ${contact?.phone || contact?.telegram || contact?.whatsapp}) пользователя ${sellerUser?.firstName} (${sellerUser?.email}) за ${amountNum} ₽. Покупатель - ${buyerUser?.firstName} (${buyerUser?.email}).`,
       });
-      
+
       await sale.save();
 
       const transactionBuy = new this.transactionModel({
@@ -1196,5 +1212,46 @@ export class UserService {
   private getRandomUsers(users: any[], count: number): any[] {
     const shuffled = users.sort(() => 0.5 - Math.random()); // Перемешиваем массив
     return shuffled.slice(0, count); // Берем первые `count` элементов
+  }
+
+  private async getFile(item: any) {
+    const photoUrl = `https://ruamo.ru${item?.mainPhoto}`;
+    const file = await fetchAsMulterFile(photoUrl);
+    // const avatarInfo = await this.fileService.fromUrl(file);
+
+    const data: CreateUserDto = {
+      isFake: true,
+      email: makeRandomEmail(),
+      password: 'uQ9$P7mZ!rC3x@8L',
+      firstName: item?.name || '',
+      sex: item?.gender === 'FEMALE' ? 'female' : 'male',
+      city: item?.city?.shortName || '',
+      age: calcAge(item?.birthDate) || 25,
+      height: item?.height || '',
+      weight: item?.weight || '',
+      sponsor: true,
+      traveling: Math.random() < 0.5,
+      relationships: Math.random() < 0.5,
+      evening: Math.random() < 0.5,
+      about: item?.aboutMe || '',
+      status: UserStatus.ACTIVE,
+    };
+
+    return await this.create(data, file)
+  }
+
+  parseUsers(data: any[]) {
+    // Получаем массив данных пользователей (data)
+    // Проходим по каждому элементу и
+
+    data.forEach((item: any) => {
+      if (item?.mainPhoto) {
+        this.getFile(item);
+      }
+    });
+    // 0. Если фото нет пропускаем
+    // 1. Создаем новый объект на базе полученого но мод мой тип, добавляем isFake: true, статус: active, почта: fake
+    // 2. Идем по ссылке и скачиваем картинку а потом сохраняем файл
+    // 3. Добавляем файл и к следующему
   }
 }

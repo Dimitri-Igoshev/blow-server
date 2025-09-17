@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { FileResponseEl } from './dto/file-response-el';
 import { format } from 'date-fns';
 import { path } from 'app-root-path';
@@ -9,12 +14,49 @@ import * as ffmpeg from 'fluent-ffmpeg';
 import * as ffmpegPath from 'ffmpeg-static';
 import * as stream from 'stream';
 import * as convert from 'heic-convert';
-import exif from 'exif-parser';
+import { promises as fs } from 'node:fs';
+import * as path2 from 'node:path';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class FileService {
   constructor() {
     ffmpeg.setFfmpegPath(ffmpegPath); // Устанавливаем путь к ffmpeg
+  }
+
+  async fromUrl(file: Express.Multer.File) {
+    if (!file || !file.buffer || !file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('Expected image file buffer');
+    }
+
+    const ext =
+      path2.extname(file.originalname) ||
+      this.extFromMime(file.mimetype) ||
+      '.jpg';
+    const baseDir = path2.resolve(process.cwd(), 'uploads', 'images');
+    await fs.mkdir(baseDir, { recursive: true });
+
+    const key = `${uuid()}${ext}`;
+    const fullPath = path2.join(baseDir, key);
+    await fs.writeFile(fullPath, file.buffer);
+
+    const publicPrefix = process.env.STATIC_PREFIX ?? '/static/images';
+    return {
+      key,
+      url: `${publicPrefix}/${key}`,
+      size: file.size,
+      mimetype: file.mimetype,
+      originalname: file.originalname,
+    };
+  }
+
+  private extFromMime(ct: string) {
+    if (ct.includes('jpeg')) return '.jpg';
+    if (ct.includes('png')) return '.png';
+    if (ct.includes('webp')) return '.webp';
+    if (ct.includes('gif')) return '.gif';
+    if (ct.includes('svg')) return '.svg';
+    return '';
   }
 
   // Метод для конвертации буфера в MP3
@@ -88,25 +130,25 @@ export class FileService {
   }
 
   async forcePortraitImage(inputBuffer: Buffer): Promise<Buffer> {
-  // Загружаем изображение и применяем rotate (на всякий случай)
-  const image = sharp(inputBuffer).rotate();
+    // Загружаем изображение и применяем rotate (на всякий случай)
+    const image = sharp(inputBuffer).rotate();
 
-  const metadata = await image.metadata();
+    const metadata = await image.metadata();
 
-  const width = metadata.width || 0;
-  const height = metadata.height || 0;
+    const width = metadata.width || 0;
+    const height = metadata.height || 0;
 
-  // Если лежит — поворачиваем вручную
-  const needsRotation = width > height;
+    // Если лежит — поворачиваем вручную
+    const needsRotation = width > height;
 
-  const processed = image
-    .rotate(needsRotation ? 90 : 0) // если альбомное — поворачиваем
-    .resize({ width: 1080, fit: 'inside' }) // можно изменить размер
-    .withMetadata({ orientation: undefined }) // удалить EXIF
-    .jpeg({ quality: 80 });
+    const processed = image
+      .rotate(needsRotation ? 90 : 0) // если альбомное — поворачиваем
+      .resize({ width: 1080, fit: 'inside' }) // можно изменить размер
+      .withMetadata({ orientation: undefined }) // удалить EXIF
+      .jpeg({ quality: 80 });
 
-  return await processed.toBuffer();
-}
+    return await processed.toBuffer();
+  }
   async saveFile(files: MFile[]): Promise<FileResponseEl[]> {
     const dateFolder = format(new Date(), 'yyyy-MM-dd');
     const uploadFolder = `${path}/uploads/${dateFolder}`;
@@ -120,30 +162,33 @@ export class FileService {
       let convertedFiles = [];
 
       // if (file?.buffer && file?.mimetype?.includes('heic')) {
-//         const jpegBuffer = await convert({
-//           buffer: file.buffer, // the HEIC file buffer
-//           format: 'JPEG', // output format
-//           quality: 1,
-//         });
+      //         const jpegBuffer = await convert({
+      //           buffer: file.buffer, // the HEIC file buffer
+      //           format: 'JPEG', // output format
+      //           quality: 1,
+      //         });
 
-//         const jpegImage = sharp(jpegBuffer);
+      //         const jpegImage = sharp(jpegBuffer);
 
-// const meta = await jpegImage.metadata();
+      // const meta = await jpegImage.metadata();
 
-// const isLandscape = meta.width && meta.height && meta.width > meta.height;
+      // const isLandscape = meta.width && meta.height && meta.width > meta.height;
 
-// const Rotatebuffer = await jpegImage
-//   .rotate(0) // безопасный noop
-//   .resize({ width: 1080, fit: 'inside' })
-//   .rotate(isLandscape ? 90 : 0) // поворачиваем если альбомная
-//   .jpeg({ quality: 80 })
-//   .withMetadata({ orientation: undefined }) // удалим остаточный EXIF
-//   .toBuffer();
+      // const Rotatebuffer = await jpegImage
+      //   .rotate(0) // безопасный noop
+      //   .resize({ width: 1080, fit: 'inside' })
+      //   .rotate(isLandscape ? 90 : 0) // поворачиваем если альбомная
+      //   .jpeg({ quality: 80 })
+      //   .withMetadata({ orientation: undefined }) // удалим остаточный EXIF
+      //   .toBuffer();
 
-        // const buffer = await this.forcePortraitImage(file.buffer);
-        // // @ts-ignore
-        // convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
-      if (file?.buffer && (file?.mimetype?.includes('image') || file?.mimetype?.includes('heic'))) {
+      // const buffer = await this.forcePortraitImage(file.buffer);
+      // // @ts-ignore
+      // convertedFiles = [{ originalname: `${file.originalname.split('.')[0]}.webp`, buffer }];
+      if (
+        file?.buffer &&
+        (file?.mimetype?.includes('image') || file?.mimetype?.includes('heic'))
+      ) {
         const buffer = await sharp(file.buffer).rotate().webp().toBuffer();
 
         // @ts-ignore
