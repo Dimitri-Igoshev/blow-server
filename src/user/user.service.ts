@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserRole, UserStatus } from './entities/user.entity';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, set } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { MFile } from 'src/file/mfile.class';
 import { FileService } from 'src/file/file.service';
@@ -1237,21 +1237,16 @@ export class UserService {
       status: UserStatus.ACTIVE,
     };
 
-    return await this.create(data, file)
+    const res = await this.create(data, file);
+    console.log(res);
+    return res;
   }
 
   parseUsers(data: any[]) {
-    // Получаем массив данных пользователей (data)
-    // Проходим по каждому элементу и
-
     data.forEach((item: any) => {
-      if (item?.mainPhoto) {
-        this.getFile(item);
-      }
+        if (item?.mainPhoto) {
+          this.getFile(item);
+        }
     });
-    // 0. Если фото нет пропускаем
-    // 1. Создаем новый объект на базе полученого но мод мой тип, добавляем isFake: true, статус: active, почта: fake
-    // 2. Идем по ссылке и скачиваем картинку а потом сохраняем файл
-    // 3. Добавляем файл и к следующему
   }
 }
