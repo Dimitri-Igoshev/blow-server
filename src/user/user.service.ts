@@ -25,7 +25,7 @@ import { Sale } from 'src/sale/entities/sale.entity';
 import { fetchAsMulterFile } from 'src/common/utils/fetch-as-multer-file';
 import { makeRandomEmail } from 'src/common/utils/make-random-email';
 import { calcAge } from 'src/common/utils/get-age';
-import { getCity } from 'src/common/utils/get-city'
+import { getCity } from 'src/common/utils/get-city';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -1138,7 +1138,8 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
+    const canActivate =
+      user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
@@ -1256,15 +1257,16 @@ export class UserService {
     };
 
     const res = await this.create(data, file);
-    console.log(res);
     return res;
   }
 
   parseUsers(data: any[]) {
     data.forEach((item: any) => {
-      if (item?.mainPhoto) {
-        this.getFile(item);
-      }
+      setInterval(() => {
+        if (item?.mainPhoto) {
+          this.getFile(item);
+        }
+      }, 1000);
     });
   }
 }
