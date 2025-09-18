@@ -10,6 +10,8 @@ export function getCity(city: string) {
       return 'ekaterinburg';
     case 'nn':
       return 'nnov';
+    case 'rnd':
+      return 'rostov';
     default:
       return city;
   }
