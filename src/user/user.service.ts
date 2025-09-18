@@ -210,7 +210,10 @@ export class UserService {
   async getAllFakes(query: Record<string, string>) {
     const { search, limit } = query;
 
-    const filter: Record<string, any> = { status: UserStatus.ACTIVE };
+    const filter: Record<string, any> = {
+      status: UserStatus.ACTIVE,
+      isFake: true,
+    };
     if (search) filter.label = { $regex: search, $options: 'i' };
 
     const limitValue = Number.parseInt(limit ?? '', 10);
@@ -1218,13 +1221,13 @@ export class UserService {
 
     if (currentHour >= 0 && currentHour < 6) {
       // Ночь (00:00 - 06:00)
-      return 15; // 15% ночью
+      return 3; // 15% ночью
     } else if (currentHour >= 6 && currentHour < 18) {
       // День (06:00 - 18:00)
-      return 25; // 25% днем
+      return 5; // 25% днем
     } else {
       // Вечер (18:00 - 00:00)
-      return 35; // 35% вечером
+      return 10; // 35% вечером
     }
   }
 
