@@ -33,6 +33,12 @@ const TOP_ID = '6830b9a752bb4caefa0418a8';
 const RAISE_ID = '6830b4d752bb4caefa041497';
 const PREMIUM_ID = '6831be446c59cd4bad808bb5';
 
+type MulterLikeFile = {
+  originalname: string;
+  buffer: Buffer;
+  mimetype: string;
+};
+
 @Injectable()
 export class UserService {
   constructor(
@@ -152,7 +158,7 @@ export class UserService {
     return { slug: ensured.slug, shortId: ensured.shortId };
   }
 
-  async create(data: CreateUserDto, file?: MFile) {
+  async create(data: CreateUserDto, file?: MFile | null) {
     const isExist = await this.getUserByEmail(data.email);
 
     if (isExist)
@@ -1272,7 +1278,7 @@ export class UserService {
   //   });
   // }
 
-  // хелпер: пауза между задачами
+  // помощник: пауза между задачами
   private sleep(ms: number) {
     return new Promise((res) => setTimeout(res, ms));
   }
@@ -1288,7 +1294,7 @@ export class UserService {
     }
   }
 
-  // нормализация пола в верхнем/нижнем регистре
+  // нормализация пола
   private normalizeSex(gender: any): {
     sexUpper: 'FEMALE' | 'MALE';
     sexLower: 'female' | 'male';
@@ -1305,22 +1311,44 @@ export class UserService {
     };
   }
 
+  // плейсхолдеры
+  private readonly PLACEHOLDERS = new Set<string>([
+    '/resources/images/man-no-profile.png',
+    '/resources/images/girl-no-profile.png',
+  ]);
+
+  private isPlaceholderPhoto(mainPhoto: string | undefined | null): boolean {
+    if (!mainPhoto) return false;
+    // на случай, если вдруг прилетит абсолютный URL — парсим и смотрим pathname
+    try {
+      const u = new URL(mainPhoto, 'https://ruamo.ru');
+      return this.PLACEHOLDERS.has(u.pathname);
+    } catch {
+      return this.PLACEHOLDERS.has(mainPhoto);
+    }
+  }
+
   /**
-   * Скачиваем фото, собираем DTO и создаём пользователя.
-   * Работает для одного item.
+   * Скачиваем фото (если не плейсхолдер), собираем DTO и создаём пользователя.
+   * По одному item — как у тебя раньше, только с обработкой заглушек.
    */
   private async getFile(item: any) {
-    const photoUrl = `https://ruamo.ru${item?.mainPhoto}`;
-    const fileData = await fetchAsMulterFile(photoUrl);
+    let file: MulterLikeFile | null = null;
 
-    const file = {
-      originalname: fileData.originalname,
-      buffer: fileData.buffer,
-      mimetype: fileData.mimetype,
-    };
+    // если фото есть и это НЕ плейсхолдер — скачиваем
+    if (item?.mainPhoto && !this.isPlaceholderPhoto(item.mainPhoto)) {
+      const photoUrl = `https://ruamo.ru${item.mainPhoto}`;
+      const fileData = await fetchAsMulterFile(photoUrl);
+      file = {
+        originalname: fileData.originalname,
+        buffer: fileData.buffer,
+        mimetype: fileData.mimetype,
+      };
+    }
+    // иначе оставляем file = null
 
     const { sexUpper, sexLower } = this.normalizeSex(item?.gender);
-    const rb = randomBody(sexUpper); // ждёт 'FEMALE' | 'MALE'
+    const rb = randomBody(sexUpper); // 'FEMALE' | 'MALE'
 
     const data: CreateUserDto = {
       isFake: true,
@@ -1340,25 +1368,26 @@ export class UserService {
       status: UserStatus.ACTIVE,
     };
 
+    // предполагается, что this.create умеет принимать null вместо файла
     const res = await this.create(data, file);
     return res;
   }
 
   /**
    * ОБРАБОТКА МАССИВА: строго последовательно, по одному, с паузой.
-   * Никаких setInterval/setTimeout внутри forEach — только await!
    */
   async parseUsers(data: any[], delayMs = 1000) {
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
+      // теперь обрабатываем и с плейсхолдерами, и с реальными фото; совсем без mainPhoto — можно пропустить
       if (!item?.mainPhoto) continue;
 
       try {
-        await this.getFile(item); // дождались сохранения предыдущего
-        if (delayMs > 0) await this.sleep(delayMs); // пауза (как у тебя интервал)
+        await this.getFile(item); // ждём сохранения
+        if (delayMs > 0) await this.sleep(delayMs);
       } catch (e: any) {
         console.warn(`parseUsers: item #${i} failed:`, e?.message ?? e);
-        // продолжаем со следующими
+        // продолжаем дальше
       }
     }
   }
