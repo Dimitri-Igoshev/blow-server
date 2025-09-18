@@ -1277,7 +1277,7 @@ export class UserService {
     return new Promise((res) => setTimeout(res, ms));
   }
 
-  // безопасный расчёт возраста (как у тебя `|| 25`, но с try/catch)
+  // безопасный расчёт возраста
   private safeAge(birth: unknown, fallback = 25): number {
     try {
       const age = calcAge(birth as any);
@@ -1288,7 +1288,7 @@ export class UserService {
     }
   }
 
-  // нормализация пола в верхнем/нижнем регистре (что у тебя и используется)
+  // нормализация пола в верхнем/нижнем регистре
   private normalizeSex(gender: any): {
     sexUpper: 'FEMALE' | 'MALE';
     sexLower: 'female' | 'male';
@@ -1307,7 +1307,7 @@ export class UserService {
 
   /**
    * Скачиваем фото, собираем DTO и создаём пользователя.
-   * Работает для одного item — как у тебя.
+   * Работает для одного item.
    */
   private async getFile(item: any) {
     const photoUrl = `https://ruamo.ru${item?.mainPhoto}`;
