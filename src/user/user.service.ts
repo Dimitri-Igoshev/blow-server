@@ -207,7 +207,7 @@ export class UserService {
     }
   }
 
-  getAllFakes(query: Record<string, string>) {
+  async getAllFakes(query: Record<string, string>) {
     const { search, limit } = query;
 
     const filter: Record<string, any> = { status: UserStatus.ACTIVE };
@@ -215,11 +215,15 @@ export class UserService {
 
     const limitValue = Number.parseInt(limit ?? '', 10);
 
-    return this.userModel
+    const res = await this.userModel
       .find(filter)
       .sort({ order: 1, label: 1 })
       .limit(Number.isNaN(limitValue) ? 10 : limitValue)
       .exec();
+
+    console.log('Фейков: ', res.length);
+
+    return res;
   }
 
   async findAll(query: Record<string, string>) {

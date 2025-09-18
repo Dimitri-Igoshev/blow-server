@@ -9,9 +9,7 @@ export function getCity(city: string) {
     case 'ekb':
       return 'ekaterinburg';
     case 'nn':
-      return 'nizhnij-novgorod';
-    case 'alma-ata':
-      return 'almata';
+      return 'nnov';
     default:
       return city;
   }
