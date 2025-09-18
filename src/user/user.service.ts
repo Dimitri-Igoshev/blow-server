@@ -25,6 +25,7 @@ import { Sale } from 'src/sale/entities/sale.entity';
 import { fetchAsMulterFile } from 'src/common/utils/fetch-as-multer-file';
 import { makeRandomEmail } from 'src/common/utils/make-random-email';
 import { calcAge } from 'src/common/utils/get-age';
+import { getCity } from 'src/common/utils/get-city'
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -176,13 +177,9 @@ export class UserService {
       period: ServicePeriod.DAY,
     });
 
-    console.log(1, file);
-
     if (!file) return savedUser;
 
     const uploaded = await this.fileService.saveFile([file]);
-
-    console.log(2, uploaded);
 
     if (uploaded && uploaded[0]?.url) {
       return this.userModel.findOneAndUpdate(
@@ -1231,8 +1228,6 @@ export class UserService {
     const fileData = await fetchAsMulterFile(photoUrl);
     // const avatarInfo = await this.fileService.fromUrl(fileData);
 
-    // console.log(fileData, avatarInfo)
-
     //     this.originalname = file.originalname;
     // this.buffer = file.buffer;
     // this.mimetype = file?.mimetype;
@@ -1248,7 +1243,7 @@ export class UserService {
       password: 'uQ9$P7mZ!rC3x@8L',
       firstName: item?.name || '',
       sex: item?.gender === 'FEMALE' ? 'female' : 'male',
-      city: item?.city?.shortName || '',
+      city: getCity(item?.city?.shortName) || '',
       age: calcAge(item?.birthDate) || 25,
       height: item?.height || '',
       weight: item?.weight || '',
