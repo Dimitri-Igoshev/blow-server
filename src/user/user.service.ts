@@ -26,6 +26,7 @@ import { fetchAsMulterFile } from 'src/common/utils/fetch-as-multer-file';
 import { makeRandomEmail } from 'src/common/utils/make-random-email';
 import { calcAge } from 'src/common/utils/get-age';
 import { getCity } from 'src/common/utils/get-city';
+import { randomBody } from 'src/common/utils/get-height';
 
 const PASSWORD = 'bejse1-betkEv-vifcoh';
 const TOP_ID = '6830b9a752bb4caefa0418a8';
@@ -1138,8 +1139,7 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate =
-      user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
+    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
@@ -1224,30 +1224,114 @@ export class UserService {
     return shuffled.slice(0, count); // Берем первые `count` элементов
   }
 
+  // private async getFile(item: any) {
+  //   const photoUrl = `https://ruamo.ru${item?.mainPhoto}`;
+  //   const fileData = await fetchAsMulterFile(photoUrl);
+  //   // const avatarInfo = await this.fileService.fromUrl(fileData);
+
+  //   //     this.originalname = file.originalname;
+  //   // this.buffer = file.buffer;
+  //   // this.mimetype = file?.mimetype;
+  //   const file = {
+  //     originalname: fileData.originalname,
+  //     buffer: fileData.buffer,
+  //     mimetype: fileData.mimetype,
+  //   };
+
+  //   const rb = randomBody(item?.gender as 'FEMALE' | 'MALE');
+
+  //   const data: CreateUserDto = {
+  //     isFake: true,
+  //     email: makeRandomEmail(),
+  //     password: 'uQ9$P7mZ!rC3x@8L',
+  //     firstName: item?.name || '',
+  //     sex: item?.gender === 'FEMALE' ? 'female' : 'male',
+  //     city: getCity(item?.city?.shortName) || '',
+  //     age: calcAge(item?.birthDate) || 25,
+  //     height: item?.height ?? rb.heightCm,
+  //     weight: item?.weight ?? rb.weightKg,
+  //     sponsor: true,
+  //     traveling: Math.random() < 0.5,
+  //     relationships: Math.random() < 0.5,
+  //     evening: Math.random() < 0.5,
+  //     about: item?.aboutMe || '',
+  //     status: UserStatus.ACTIVE,
+  //   };
+
+  //   const res = await this.create(data, file);
+  //   return res;
+  // }
+
+  // parseUsers(data: any[]) {
+  //   data.forEach((item: any) => {
+  //     setInterval(() => {
+  //       if (item?.mainPhoto) {
+  //         this.getFile(item);
+  //       }
+  //     }, 1000);
+  //   });
+  // }
+
+  // хелпер: пауза между задачами
+  private sleep(ms: number) {
+    return new Promise((res) => setTimeout(res, ms));
+  }
+
+  // безопасный расчёт возраста (как у тебя `|| 25`, но с try/catch)
+  private safeAge(birth: unknown, fallback = 25): number {
+    try {
+      const age = calcAge(birth as any);
+      if (!Number.isFinite(age) || age <= 0 || age > 120) return fallback;
+      return age;
+    } catch {
+      return fallback;
+    }
+  }
+
+  // нормализация пола в верхнем/нижнем регистре (что у тебя и используется)
+  private normalizeSex(gender: any): {
+    sexUpper: 'FEMALE' | 'MALE';
+    sexLower: 'female' | 'male';
+  } {
+    const isFemale =
+      gender === 'FEMALE' ||
+      gender === 'female' ||
+      gender === 'f' ||
+      gender === 'Ж' ||
+      gender === 0;
+    return {
+      sexUpper: isFemale ? 'FEMALE' : 'MALE',
+      sexLower: isFemale ? 'female' : 'male',
+    };
+  }
+
+  /**
+   * Скачиваем фото, собираем DTO и создаём пользователя.
+   * Работает для одного item — как у тебя.
+   */
   private async getFile(item: any) {
     const photoUrl = `https://ruamo.ru${item?.mainPhoto}`;
     const fileData = await fetchAsMulterFile(photoUrl);
-    // const avatarInfo = await this.fileService.fromUrl(fileData);
 
-    //     this.originalname = file.originalname;
-    // this.buffer = file.buffer;
-    // this.mimetype = file?.mimetype;
     const file = {
       originalname: fileData.originalname,
       buffer: fileData.buffer,
       mimetype: fileData.mimetype,
     };
 
+    const { sexUpper, sexLower } = this.normalizeSex(item?.gender);
+    const rb = randomBody(sexUpper); // ждёт 'FEMALE' | 'MALE'
+
     const data: CreateUserDto = {
       isFake: true,
       email: makeRandomEmail(),
       password: 'uQ9$P7mZ!rC3x@8L',
       firstName: item?.name || '',
-      sex: item?.gender === 'FEMALE' ? 'female' : 'male',
+      sex: sexLower, // 'female' | 'male'
       city: getCity(item?.city?.shortName) || '',
-      age: calcAge(item?.birthDate) || 25,
-      height: item?.height || '',
-      weight: item?.weight || '',
+      age: this.safeAge(item?.birthDate, 25),
+      height: item?.height ?? rb.heightCm,
+      weight: item?.weight ?? rb.weightKg,
       sponsor: true,
       traveling: Math.random() < 0.5,
       relationships: Math.random() < 0.5,
@@ -1260,13 +1344,22 @@ export class UserService {
     return res;
   }
 
-  parseUsers(data: any[]) {
-    data.forEach((item: any) => {
-      setInterval(() => {
-        if (item?.mainPhoto) {
-          this.getFile(item);
-        }
-      }, 1000);
-    });
+  /**
+   * ОБРАБОТКА МАССИВА: строго последовательно, по одному, с паузой.
+   * Никаких setInterval/setTimeout внутри forEach — только await!
+   */
+  async parseUsers(data: any[], delayMs = 1000) {
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+      if (!item?.mainPhoto) continue;
+
+      try {
+        await this.getFile(item); // дождались сохранения предыдущего
+        if (delayMs > 0) await this.sleep(delayMs); // пауза (как у тебя интервал)
+      } catch (e: any) {
+        console.warn(`parseUsers: item #${i} failed:`, e?.message ?? e);
+        // продолжаем со следующими
+      }
+    }
   }
 }
