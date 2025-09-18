@@ -12,5 +12,7 @@ export function getCity(city: string) {
       return 'nizhnij-novgorod';
     case 'alma-ata':
       return 'almata';
+    default:
+      return city;
   }
 }
