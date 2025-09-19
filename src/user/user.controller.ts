@@ -188,4 +188,9 @@ export class UserController {
   parseUsers(@Body() data: any[]) {
     return this.userService.parseUsers(data);
   }
+
+  @Get('get/users/count')
+  getUsersCount() {
+    return this.userService.getUsersCount();
+  }
 }

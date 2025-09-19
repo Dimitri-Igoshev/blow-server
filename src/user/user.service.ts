@@ -1176,6 +1176,51 @@ export class UserService {
       .exec();
   }
 
+async getUsersCount() {
+  const cutoff = new Date(Date.now() - 30 * 60 * 1000); // 30 минут назад
+
+  const [
+    all,
+    active,
+    fake,
+    real,
+    fakeOnline,
+    realOnline,
+  ] = await Promise.all([
+    // быстрое общее количество
+    this.userModel.estimatedDocumentCount(), // если нужна точность — замените на countDocuments({})
+    // активные всего
+    this.userModel.countDocuments({ status: UserStatus.ACTIVE }),
+    // активные фейки
+    this.userModel.countDocuments({ isFake: true, status: UserStatus.ACTIVE }),
+    // активные не фейки (и те, у кого поля нет)
+    this.userModel.countDocuments({
+      status: UserStatus.ACTIVE,
+      $or: [{ isFake: false }, { isFake: { $exists: false } }],
+    }),
+    // онлайн фейки
+    this.userModel.countDocuments({
+      isFake: true,
+      status: UserStatus.ACTIVE,
+      activity: { $gte: cutoff },
+    }),
+    // онлайн не фейки
+    this.userModel.countDocuments({
+      status: UserStatus.ACTIVE,
+      $or: [{ isFake: false }, { isFake: { $exists: false } }],
+      activity: { $gte: cutoff },
+    }),
+  ]);
+
+  const totalOnline = fakeOnline + realOnline;
+
+  return {
+    totals: { all, active, fake, real },
+    online: { fake: fakeOnline, real: realOnline, total: totalOnline, windowMinutes: 30 },
+  };
+}
+
+
   async fakeActivity() {
     try {
       // 1. Получаем все анкеты с пометкой "fake"
