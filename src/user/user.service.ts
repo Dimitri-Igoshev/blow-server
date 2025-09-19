@@ -1152,7 +1152,8 @@ export class UserService {
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // @ts-ignore
-    const canActivate = user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
+    const canActivate =
+      user?.services?.find((s: any) => s?._id == RAISE_ID)?.quantity > 0;
 
     if (!canActivate) return null;
 
@@ -1183,15 +1184,31 @@ export class UserService {
         .find({ isFake: true }) // Пометка анкеты fake
         .exec();
 
+      const notFakeUsers = await this.userModel
+        .find({
+          $or: [{ isFake: false }, { isFake: { $exists: false } }],
+        })
+        .exec();
+
       // 2. Рассчитываем, сколько анкеты нужно активировать в зависимости от времени суток
       const totalUsers = fakeUsers.length;
-      const randomPercentage = this.getActivityPercentage(); // Получаем процент в зависимости от времени суток
+      const notFakeUsersCount = notFakeUsers.length;
+      const randomPercentage = this.getActivityPercentage(1, 1, 1); // Получаем процент в зависимости от времени суток
+      const notFakeUsersPercentage = this.getActivityPercentage(3, 5, 10);
       const activeCount = Math.floor((randomPercentage / 100) * totalUsers);
+      const notFakeActiveCount = Math.floor(
+        (notFakeUsersPercentage / 100) * notFakeUsersCount,
+      );
 
       // 3. Изменяем активность у случайных пользователей
       const usersToActivate = this.getRandomUsers(fakeUsers, activeCount);
+      const notFakeUsersToActivate = this.getRandomUsers(
+        notFakeUsers,
+        notFakeActiveCount,
+      );
 
       const updatedUsers: any[] = [];
+      const notFakeUpdatedUsers: any[] = [];
       const timestamp = new Date(); // Время активации
 
       for (const user of usersToActivate) {
@@ -1205,6 +1222,17 @@ export class UserService {
         if (updatedUser) updatedUsers.push(updatedUser);
       }
 
+      for (const user of notFakeUsersToActivate) {
+        const notFakeUpdatedUser = await this.userModel
+          .findOneAndUpdate(
+            { _id: user._id },
+            { activity: timestamp },
+            { new: true },
+          )
+          .exec();
+        if (notFakeUpdatedUser) notFakeUpdatedUsers.push(notFakeUpdatedUser);
+      }
+
       // 4. Возвращаем результат
       return updatedUsers;
     } catch (error: any) {
@@ -1216,18 +1244,22 @@ export class UserService {
   }
 
   // Метод для получения процента активности в зависимости от времени суток
-  private getActivityPercentage(): number {
+  private getActivityPercentage(
+    night: number,
+    day: number,
+    evening: number,
+  ): number {
     const currentHour = new Date().getHours(); // Получаем текущий час
 
     if (currentHour >= 0 && currentHour < 6) {
       // Ночь (00:00 - 06:00)
-      return 3; // 15% ночью
+      return night; // 15% ночью
     } else if (currentHour >= 6 && currentHour < 18) {
       // День (06:00 - 18:00)
-      return 5; // 25% днем
+      return day; // 25% днем
     } else {
       // Вечер (18:00 - 00:00)
-      return 10; // 35% вечером
+      return evening; // 35% вечером
     }
   }
 
