@@ -64,12 +64,12 @@ export class AuthService {
     if (isExist && isExist.status === UserStatus.ARHIVE) {
       res = await this.userService.update(isExist._id.toString(), {
         ...data,
-        status: UserStatus.NEW,
+        status: data?.status ? data.status : UserStatus.NEW,
       });
     } else {
       res = await this.userService.create({
         ...data,
-        status: UserStatus.NEW,
+        status: data?.status ? data.status : UserStatus.NEW,
       });
     }
 

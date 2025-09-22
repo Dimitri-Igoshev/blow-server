@@ -8,4 +8,5 @@ export class LoginDto {
   weight?: number;
   sponsor?: boolean;
   photos?: any[];
+  status?: string;
 }
