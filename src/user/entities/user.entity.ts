@@ -213,6 +213,9 @@ export class User {
 
   @Prop()
   purchasedContacts?: PurchasedContacts[];
+
+  @Prop({ default: false })
+  fromLanding?: boolean
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
