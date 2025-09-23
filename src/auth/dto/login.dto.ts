@@ -9,4 +9,5 @@ export class LoginDto {
   sponsor?: boolean;
   photos?: any[];
   status?: string;
+  fromLanding?: boolean;
 }

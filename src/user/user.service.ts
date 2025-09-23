@@ -243,6 +243,7 @@ export class UserService {
       maxage,
       withPhoto,
       random,
+      fromLanding
     } = query;
 
     // нормализуем флаги
@@ -277,6 +278,7 @@ export class UserService {
     if (status && status !== UserStatus.ALL) filter.status = status as any;
     if (sex) filter.sex = sex;
     if (city) filter.city = city;
+    if (fromLanding) filter.fromLanding = true;
 
     if (minage || maxage) {
       filter.age = {
