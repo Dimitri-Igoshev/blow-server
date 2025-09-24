@@ -6,7 +6,6 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { format } from 'date-fns';
 import { UserStatus } from 'src/user/entities/user.entity';
 import { BadRequestException } from '@nestjs/common';
-import { sanitizeContactsStrict } from './contactSanitizer'
 
 interface MessageNotificationParams {
   recipient: any;
@@ -137,7 +136,7 @@ export class ChatService {
       chat: chat._id,
       sender: data.sender,
       recipient: data.recipient,
-      text: sanitizeContactsStrict(data?.text || '') ?? '',
+      text: data?.text ?? '',
       fileUrl: data?.fileUrl ?? '',
       replyTo: data?.replyTo ?? null,
       unreadBy: [data.recipient],
@@ -197,7 +196,7 @@ export class ChatService {
       chat: data?.chat,
       type: 'system',
       recipient: data?.recipient,
-      text: sanitizeContactsStrict(data?.text || ''),
+      text: data?.text,
       unreadBy: data?.unreadBy || [data?.recipient],
     });
 
