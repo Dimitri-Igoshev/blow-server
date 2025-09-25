@@ -176,13 +176,13 @@ export class UserService {
     const savedUser = await newUser.save();
     await this.ensureSlugAndShortId(savedUser);
 
-    await this.buyService({
-      userId: savedUser?._id.toString(),
-      price: 0,
-      serviceId: PREMIUM_ID,
-      quantity: 0,
-      period: ServicePeriod.DAY,
-    });
+    // await this.buyService({
+    //   userId: savedUser?._id.toString(),
+    //   price: 0,
+    //   serviceId: PREMIUM_ID,
+    //   quantity: 0,
+    //   period: ServicePeriod.DAY,
+    // });
 
     if (!file) return savedUser;
 

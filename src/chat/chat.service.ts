@@ -6,6 +6,8 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { format } from 'date-fns';
 import { UserStatus } from 'src/user/entities/user.entity';
 import { BadRequestException } from '@nestjs/common';
+import { isPremium } from 'src/common/utils/checkIsActive'
+import { sanitizeContactsClient } from './sanitizeClient'
 
 interface MessageNotificationParams {
   recipient: any;
@@ -183,7 +185,7 @@ export class ChatService {
       sender: {
         firstName: sender?.firstName || 'пользователя Blow',
       },
-      messageText: savedMessage?.text || '',
+      messageText: isPremium(recipient) || recipient?.sex === 'female' ? savedMessage?.text : sanitizeContactsClient(savedMessage?.text).text,
       chatLink: `https://blow.ru`,
     });
 
